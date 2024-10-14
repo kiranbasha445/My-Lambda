@@ -1,20 +1,21 @@
-const path = require("path");
-const { CleanWebpackPlugin } = require("clean-webpack-plugin");
+const path = require('path')
+const { CleanWebpackPlugin } = require('clean-webpack-plugin')
 
 module.exports = {
-  target: "node",
+  target: 'node',
   module: {
     rules: [
       {
         test: /\.ts$/,
-        use: "ts-loader",
-        exclude: /node_modules/,
-      },
-    ],
+        use: 'ts-loader',
+        exclude: /node_modules/
+      }
+    ]
   },
   resolve: {
-    extensions: [".ts", ".js", ".json"],
+    extensions: ['.ts', '.js', '.json']
   },
+  mode: 'production',
   plugins: [new CleanWebpackPlugin()],
-  devtool: "source-map",
-};
+  devtool: 'source-map'
+}
