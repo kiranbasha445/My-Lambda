@@ -1,0 +1,12 @@
+src/**/*.js
+src/**/*.d.ts
+node_modules
+coverage
+package-lock.json
+.vscode
+CODE_OF_CONDUCT.md
+CONTRIBUTING.md
+README.md
+.prettierrc
+.github
+.code-pipeline

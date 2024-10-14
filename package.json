@@ -1,0 +1,50 @@
+{
+  "name": "my-batch-lambdas",
+  "version": "1.0.0",
+  "description": "AWS Lambda functions for the implementing jobs for OpenText Dialog Extream batch jobs.",
+  "license": "ISC",
+  "private": true,
+  "scripts": {
+    "build": "npm run bundle --workspaces --if-present",
+    "compile": "npm run compile --workspaces --if-present",
+    "lint": "eslint --quiet --ext .ts .",
+    "lint:fix": "eslint --fix . --format eslint-formatter-multiple",
+    "format": "prettier src/*/.ts --write",
+    "test": "jest --config ./jest.config.js --coverage --logHeapUsage",
+    "test:watch": "jest --config ./jest.config.js --watch"
+  },
+  "workspaces": [
+    "./src/lambdas/*",
+    "./src/shared"
+  ],
+  "lint-staged": {
+    "*.{ts,js}": [
+      "prettier --write",
+      "eslint --fix"
+    ]
+  },
+  "devDependencies": {
+    "@smithy/util-stream": "^2.2.0",
+    "@types/aws-lambda": "^8.10.134",
+    "@types/jest": "^29.5.2",
+    "@types/node": "^20.11.17",
+    "@typescript-eslint/eslint-plugin": "^7.0.1",
+    "@typescript-eslint/parser": "^7.0.1",
+    "aws-sdk-client-mock": "^4.0.0",
+    "clean-webpack-plugin": "^4.0.0",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-prettier": "^5.2.1",
+    "husky": "^9.1.6",
+    "jest": "^29.5.2",
+    "lint-staged": "^15.2.2",
+    "prettier": "^3.3.3",
+    "ts-jest": "^29.1.1",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "3.600.0",
+    "@aws-sdk/client-sns": "3.600.0",
+    "@aws-sdk/lib-storage": "3.600.0"
+  }
+}
