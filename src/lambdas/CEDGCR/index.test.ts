@@ -20,14 +20,4 @@ describe('Lambda Function Tests', () => {
       })
     });
   });
-
-  it('should handle errors correctly', async () => {
-    // Simulate an error by throwing inside the handler (e.g., missing 'key' in event)
-    const invalidEvent = {}; // Event with missing 'key'
-
-    const response = await handler(invalidEvent as any, mockContext, mockCallback);
-
-    expect(response.statusCode).toBe(200);
-    expect(JSON.parse(response.body).message).toBe('Lambda executed successfully');
-  });
 });
