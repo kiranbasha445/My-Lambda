@@ -1,0 +1,136 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'The root stack for deploying all the resources for the pipeline'
+
+Mappings:
+  CICDPipelineProductParameters:
+    default:
+      ProductName: 'BP-Codepipeline-3-Stages-Approval-Product'
+      ProvisioningArtifactName: '0.0.15'
+
+Conditions:
+  IsSupportedRegion: !Equals
+    - !Sub ${AWS::Region}
+    - ap-south-1
+  IsProdEnvironment: !Equals [!Ref EnvironmentName, 'prod']
+
+Parameters:
+  ApplicationName:
+    Type: String
+    Description: Application name
+  EnvironmentName:
+    Type: String
+    Description: Environment name
+    AllowedValues:
+      - 'dev'
+      - 'test'
+      - 'staging'
+      - 'prod'
+  EmailAddressForPipelineNotifications:
+    Type: String
+    Description: '[Required] Email address for pipeline failure notifications'
+  TeamName:
+    Type: String
+    Description: '[Required] Short name of the team'
+  CodeBuildProjectOneBuildSpecFilename:
+    Type: String
+    Description: "[Required] BuildSpec file name with path. Default: 'buildspec.yml'"
+    Default: 'pipeline1/tbv.buildspec.yml'
+  CodeBuildProjectTwoBuildSpecFilename:
+    Type: String
+    Description: "[Required] BuildSpec file name with path. Default: 'buildspec.yml'"
+    Default: 'pipeline1/tbv.buildspec.yml'
+  CodeBuildImage:
+    Type: String
+    Description: "[Required] The codebuild image to use. Default: 'aws/codebuild/standard:7.0'"
+    Default: 'aws/codebuild/standard:7.0'
+  DataClassification:
+    Type: String
+    Description: Data classification
+  CodestarConnectionArn:
+    Type: String
+    Description: Arn of the Codestar connection
+  GithubRepoBranch:
+    Type: String
+    Description: Branch name of the GitHub repo
+    Default: trust_build_verify
+  GithubRepoName:
+    Type: String
+    Description: GitHub repo name
+  GithubRepoOwner:
+    Type: String
+    Description: Owner of the GitHub repo
+  CodeBuildRoleManagedPoliciesArns:
+    Type: String
+    Description: ARN of the code build role managed IAM policies, if needed.
+    Default: ''
+  PortfolioId:
+    Type: String
+    Description: Service Catalog Portfolio ID
+  BucketName:
+    Type: String
+    Description: Overrides the generated default artifact bucket name
+
+Resources:
+  CICDPipelineProduct:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: !FindInMap [CICDPipelineProductParameters, 'default', 'ProductName']
+      ProvisioningArtifactName: !FindInMap [CICDPipelineProductParameters, 'default', 'ProvisioningArtifactName']
+      ProvisioningParameters:
+        - Key: 'ApplicationName'
+          Value: !Ref ApplicationName
+        - Key: 'EnvironmentName'
+          Value: !Ref EnvironmentName
+        - Key: 'BucketName'
+          Value: !Ref BucketName
+        - Key: 'PipelineName'
+          Value: !Sub ${ApplicationName}-${EnvironmentName}
+        - Key: 'EmailEndpoint'
+          Value: !Ref EmailAddressForPipelineNotifications
+        - Key: 'TeamName'
+          Value: !Ref TeamName
+        - Key: 'CodeBuildProjectOneBuildSpecFilename'
+          Value: !Ref CodeBuildProjectOneBuildSpecFilename
+        - Key: 'CodeBuildProjectOneImage'
+          Value: !Ref CodeBuldImage
+        - Key: 'CodeBuildProjectTwoBuildSpecFilename'
+          Value: !Ref CodeBuildProjectTwoBuildSpecFilename
+        - Key: 'CodeBuildProjectTwoImage'
+          Value: !Ref CodeBuildImage
+        - Key: 'CodeBuildProjectTwoEnvironmentVariableType'
+          Value: 'PLAINTEXT'
+        - Key: 'CodeBuildProjectTwoEnvironmentVariableName'
+          Value: 'ENVIRONMENT'
+        - Key: 'CodeBuildProjectTwoEnvironmentVariableValue'
+          Value: !Ref EnvironmentName
+        - Key: 'CodeBuildRoleManagedPoliciesArns'
+          Value: !Ref CodeBuildRoleManagedPoliciesArns
+        - Key: 'CodePipelineStageTwoName'
+          Value: 'LintTestBuild'
+        - Key: 'CodePipelineStageThreeName'
+          Value: !Sub 'DeployTo${EnvironmentName}'
+        - Key: 'CodeStartConnectionArn'
+          Value: !Ref CodeStartConnectionArn
+        - Key: 'DataClassification'
+          Value: !Ref DataClassification
+        - Key: 'GithubRepoBranch'
+          Value: !Ref GithubRepoBranch
+        - Key: 'GithubRepoName'
+          Value: !Ref GithubRepoName
+        - Key: 'GithubRepoOwner'
+          Value: !Ref GithubRepoOwner
+        - Key: 'PipelineDetectChanges'
+          Value: true
+        - Key: 'IsApprovalRequired'
+          Value: !If [IsProdEnvironment, 'true', 'false']
+        - Key: 'CodeBuildRoleManagedPoliciesArns'
+          Value: !Ref CodeBuildRoleManagedPoliciesArns
+        - Key: 'PortfolioId'
+          Value: !Ref PortfolioId
+        - Key: 'CodeBuildProjectTimeoutInMinutes'
+          Value: 60
+
+Outputs:
+  CICDServiceCatalogNestedStackArn:
+    Description: The arn of the CICd Service Catalog CloudFormation stack
+    Value: !GetAtt CICDPipelineProduct.CloudformationStackArn
