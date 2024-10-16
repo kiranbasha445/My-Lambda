@@ -88,15 +88,15 @@ jobs:
         with:
           name: lambda-build
 
-      # Step 3: Extract the artifact
-      - name: Extract artifact
-        run: |
-          if [ -f "lambda-build.zip" ]; then
-            unzip lambda-build.zip -d dist
-          else
-            echo "Error: lambda-build.zip does not exist."
-            exit 1
-          fi
+      # # Step 3: Extract the artifact
+      # - name: Extract artifact
+      #   run: |
+      #     if [ -f "lambda-build.zip" ]; then
+      #       unzip lambda-build.zip -d dist
+      #     else
+      #       echo "Error: lambda-build.zip does not exist."
+      #       exit 1
+      #     fi
 
       # Step 4: Log the contents of the dist directory
       - name: List contents of dist directory
@@ -105,22 +105,22 @@ jobs:
       # Step 5: Check if the expected Lambda ZIP file exists before deploying
       - name: Check for Lambda ZIP file
         run: |
-          if [ ! -f "dist/lambdas.zip" ]; then
-            echo "Error: 'dist/lambdas.zip' does not exist."
+          if [ ! -f "lambda-build.zip" ]; then
+            echo "Error: 'lambda-build.zip' does not exist."
             exit 1
           else
-            echo "'dist/lambdas.zip' exists."
+            echo "'lambda-build.zip' exists."
           fi
 
       # Step 6: Deploy Lambda using CloudFormation
       - name: Deploy Lambda functions using CloudFormation
         run: |
           # Set up variables
-          LAMBDA_CODE_ZIP_FILE_PATH="dist/lambdas.zip"
+          LAMBDA_CODE_ZIP_FILE_PATH="lambda-build.zip"
           PIPELINE_STACK_NAME="${{ env.APPLICATION_NAME }}-${{ env.ENVIRONMENT }}-pipeline-stack"
 
           # Upload the artifact to S3
-          aws s3 cp $LAMBDA_CODE_ZIP_FILE_PATH s3://my-lambda-bucket/${{ env.APPLICATION_NAME }}-${{ env.ENVIRONMENT }}/lambda.zip
+          aws s3 cp $LAMBDA_CODE_ZIP_FILE_PATH s3://my-lambda-bucket/${{ env.APPLICATION_NAME }}-${{ env.ENVIRONMENT }}/lambda-build.zip
 
           # Deploy the CloudFormation stack with AWS CLI
           aws cloudformation deploy \
@@ -128,5 +128,5 @@ jobs:
             --template-file cloudformation.yml \
             --capabilities CAPABILITY_NAMED_IAM \
             --parameter-overrides \
-            "ZippedLambdaS3Key=${{ env.APPLICATION_NAME }}-${{ env.ENVIRONMENT }}/lambda.zip" \
+            "ZippedLambdaS3Key=${{ env.APPLICATION_NAME }}-${{ env.ENVIRONMENT }}/lambda-build.zip" \
             "ArtifactsBucketName=my-lambda-bucket"
