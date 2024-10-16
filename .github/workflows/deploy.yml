@@ -43,19 +43,23 @@ jobs:
       - name: Build project
         run: npm run build
 
-      # Step 7: Check if the dist directory exists and is not empty
+      # Step 7: List contents of the current directory for debugging
+      - name: List current directory
+        run: ls -la
+
+      # Step 8: Check if the dist directory exists and is not empty
       - name: Check dist directory
         run: |
-          if [ ! -d "dist" ] || [ -z "$(ls -A dist)" ]; then
-            echo "Error: 'dist' directory does not exist or is empty."
+          if [ ! -d "src/lambdas/CEDGCR/dist" ] || [ -z "$(ls -A src/lambdas/CEDGCR/dist)" ]; then
+            echo "Error: 'src/lambdas/CEDGCR/dist' directory does not exist or is empty."
             exit 1
           fi
 
-      # Step 8: Archive build output
+      # Step 9: Archive build output
       - name: Archive build artifacts
-        run: zip -r lambda-build.zip dist
+        run: zip -r lambda-build.zip src/lambdas/CEDGCR/dist
 
-      # Step 9: Upload build artifacts
+      # Step 10: Upload build artifacts
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
