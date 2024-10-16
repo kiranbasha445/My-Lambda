@@ -57,7 +57,7 @@ jobs:
 
       # Step 9: Archive build output
       - name: Archive build artifacts
-        run: zip -r lambda-build.zip src/lambdas/CEDGCR/dist
+        run: zip -r lambda-build.zip src/lambdas/CEDGCR/dist/*
 
       # Step 10: Upload build artifacts
       - name: Upload build artifacts
