@@ -43,10 +43,19 @@ jobs:
       - name: Build project
         run: npm run build
 
-      # Step 7: Archive build output
+      # Step 7: Check if the dist directory exists and is not empty
+      - name: Check dist directory
+        run: |
+          if [ ! -d "dist" ] || [ -z "$(ls -A dist)" ]; then
+            echo "Error: 'dist' directory does not exist or is empty."
+            exit 1
+          fi
+
+      # Step 8: Archive build output
       - name: Archive build artifacts
         run: zip -r lambda-build.zip dist
-        # Upload artifacts for later use
+
+      # Step 9: Upload build artifacts
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -75,11 +84,17 @@ jobs:
         with:
           name: lambda-build
 
-      # Step 3: Extract the artifact (optional)
+      # Step 3: Extract the artifact
       - name: Extract artifact
-        run: unzip lambda-build.zip -d dist
+        run: |
+          if [ -f "lambda-build.zip" ]; then
+            unzip lambda-build.zip -d dist
+          else
+            echo "Error: lambda-build.zip does not exist."
+            exit 1
+          fi
 
-      # Step 4: Deploy Lambda using CloudFormation (updated AWS deployment)
+      # Step 4: Deploy Lambda using CloudFormation
       - name: Deploy Lambda functions using CloudFormation
         run: |
           # Set up variables
