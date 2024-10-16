@@ -48,7 +48,7 @@ jobs:
         run: zip -r lambda-build.zip dist
         # Upload artifacts for later use
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: lambda-build
           path: lambda-build.zip
@@ -67,11 +67,11 @@ jobs:
     steps:
       # Step 1: Checkout the repository
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       # Step 2: Download the artifact from the build job
       - name: Download build artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: lambda-build
 
