@@ -98,21 +98,27 @@ jobs:
             exit 1
           fi
 
-      # Step 4: Check if the expected file exists before deploying
+      # Step 4: Log the contents of the dist directory
+      - name: List contents of dist directory
+        run: ls -la dist
+
+      # Step 5: Check if the expected Lambda ZIP file exists before deploying
       - name: Check for Lambda ZIP file
         run: |
           if [ ! -f "dist/lambdas.zip" ]; then
             echo "Error: 'dist/lambdas.zip' does not exist."
             exit 1
+          else
+            echo "'dist/lambdas.zip' exists."
           fi
 
-      # Step 5: Deploy Lambda using CloudFormation
+      # Step 6: Deploy Lambda using CloudFormation
       - name: Deploy Lambda functions using CloudFormation
         run: |
           # Set up variables
           LAMBDA_CODE_ZIP_FILE_PATH="dist/lambdas.zip"
           PIPELINE_STACK_NAME="${{ env.APPLICATION_NAME }}-${{ env.ENVIRONMENT }}-pipeline-stack"
-          
+
           # Upload the artifact to S3
           aws s3 cp $LAMBDA_CODE_ZIP_FILE_PATH s3://my-lambda-bucket/${{ env.APPLICATION_NAME }}-${{ env.ENVIRONMENT }}/lambda.zip
 
