@@ -43,9 +43,9 @@ jobs:
       - name: Build project
         run: npm run build
 
-      # Step 7: List contents of the current directory for debugging
-      - name: List current directory
-        run: ls -la
+      # Step 7: List contents of the dist directory for debugging
+      - name: List dist directory
+        run: ls -la src/lambdas/CEDGCR/dist
 
       # Step 8: Check if the dist directory exists and is not empty
       - name: Check dist directory
@@ -98,14 +98,22 @@ jobs:
             exit 1
           fi
 
-      # Step 4: Deploy Lambda using CloudFormation
+      # Step 4: Check if the expected file exists before deploying
+      - name: Check for Lambda ZIP file
+        run: |
+          if [ ! -f "dist/lambdas.zip" ]; then
+            echo "Error: 'dist/lambdas.zip' does not exist."
+            exit 1
+          fi
+
+      # Step 5: Deploy Lambda using CloudFormation
       - name: Deploy Lambda functions using CloudFormation
         run: |
           # Set up variables
           LAMBDA_CODE_ZIP_FILE_PATH="dist/lambdas.zip"
           PIPELINE_STACK_NAME="${{ env.APPLICATION_NAME }}-${{ env.ENVIRONMENT }}-pipeline-stack"
           
-          # Upload the artifact to S3 (if needed)
+          # Upload the artifact to S3
           aws s3 cp $LAMBDA_CODE_ZIP_FILE_PATH s3://my-lambda-bucket/${{ env.APPLICATION_NAME }}-${{ env.ENVIRONMENT }}/lambda.zip
 
           # Deploy the CloudFormation stack with AWS CLI
