@@ -79,7 +79,7 @@ deploy_lambdas() {
 
         # Print the files in the current directory
         echo "Files in the current directory:"
-        ls -al  # List all files in the current directory
+        ls -al src/lambdas/CEDGCR/
 
         cd ${DIR}dist
         zip -r $ZIPFILE *
