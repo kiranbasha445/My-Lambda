@@ -76,7 +76,7 @@ deploy_lambdas() {
         ZIPFILE="$(basename $DIR)_$(date +%s).zip"
         $DEBUG && echo "DEBUG: ZIPFILE=${ZIPFILE}"
 
-        cd ${DIR}/dist
+        cd ${DIR}dist
         zip -r $ZIPFILE *
         mv $ZIPFILE $OLDPWD && cd $OLDPWD
 
