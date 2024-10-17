@@ -45,4 +45,3 @@ jobs:
         run: |
           chmod +x .code-pipeline/deploy-stage-2.sh && \
           bash .code-pipeline/deploy-stage-2.sh --environment ${{ env.ENVIRONMENT }} --application-name ${{ env.APPLICATION_NAME }} --debug true
-``
