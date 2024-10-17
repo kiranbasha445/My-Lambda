@@ -9,7 +9,7 @@ on:
       - test
 
 jobs:
-  build:
+  deployLambdas:
     runs-on: ubuntu-latest
 
     env:
@@ -20,61 +20,25 @@ jobs:
       AWS_REGION: ap-south-1
 
     steps:
-      # Step 1: Checkout the repository
-      - name: Checkout repository
+      - name: Build
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # Step 2: Set up Node.js environment (from file1)
-      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      # Step 3: Install dependencies (from file1)
-      - name: Install dependencies
-        run: npm install
-
-      # Step 4: Run linting (from file1)
-      - name: Run lint
-        run: npm run lint
-
-      # Step 5: Run tests (from file1)
-      - name: Run tests
-        run: npm run test
-
-      # Step 6: Build the project (from file1)
-      - name: Build project
-        run: npm run build
-
-      - name: Check for dist directories
         run: |
-          if [ "$(find src/lambdas/*/dist -type d)" ]; then
-            echo "dist directories exist"
-          else
-            echo "No dist directories found"
-            echo "Listing all files in the repository:"
-            find . -type f
-          fi
+          npm install && \
+          npm run lint && \
+          npm run test && \
+          npm run build
 
-      # Step 7: Make the deploy script executable (from file2)
-      - name: Make deploy script executable
-        run: chmod +x .code-pipeline/deploy-stage-2.sh
+      - name: Deploy
+        run: |
+          chmod +x .code-pipeline/deploy-stage-2.sh && \
+          bash .code-pipeline/deploy-stage-2.sh --environment ${{ env.ENVIRONMENT }} --application-name ${{ env.APPLICATION_NAME }} --debug true
 
-      # Step 8: Deploy using deploy-stage-2.sh script (from file2)
-      - name: Deploy Lambdas
-        run: bash .code-pipeline/deploy-stage-2.sh --environment ${{ env.ENVIRONMENT }} --application-name ${{ env.APPLICATION_NAME }} --debug true
-
-      #  # Step 7: Archive the entire repository
-      # - name: Archive entire repository
-      #   run: zip -r lambda-build.zip .  # Zips everything in the current directory (root of the repo)
-
-      # # Step 8: Upload build artifacts (from file1)
-      # - name: Upload build artifacts
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: lambda-build
-      #     path: lambda-build.zip
 
 
