@@ -13,7 +13,7 @@ export const handler: Handler = async (event: LambdaEvent) => {
     const { key } = event;
 
     // Example logic - you can replace this with your actual functionality
-    console.log(`Processing event for key: ${key}`);
+    console.log(`Processing event for key : ${key}`);
 
     // Simulate success
     return {

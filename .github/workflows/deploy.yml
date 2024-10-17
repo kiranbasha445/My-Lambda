@@ -43,6 +43,10 @@ jobs:
       - name: Build project
         run: npm run build
 
+      # Step 7: List all files after build (log added)
+      - name: List build files
+        run: ls -R
+
       # Step 7: Archive build output (similar to file1 and file2)
       - name: Archive build artifacts
         run: zip -r lambda-build.zip ./*
@@ -77,6 +81,10 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: lambda-build
+
+      # Step 3: List all files in the workspace (log added)
+      - name: List deploy files
+        run: ls -R
 
       # Step 3: Make the deploy script executable (from file2)
       - name: Make deploy script executable
