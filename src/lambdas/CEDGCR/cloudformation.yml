@@ -25,12 +25,36 @@ Conditions:
     - ap-south-1
 
 Resources:
+  # IAM Role for Lambda Function
+  MyLambdaCEDRCR:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: My-Lambda-CEDRCR
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: MyLambdaCEDRCRPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: arn:aws:logs:*:*:*
   Lambda:
     Condition: IsSupportedRegion
     Type: AWS::Lambda::Function
     Properties:
       FunctionName: !Sub 'dialog-extream-batch-${EnvironmentName}-CEDGCR-Lambda'
       Handler: 'index.handler'
+      Role: !Sub 'arn:aws:iam::${AWS::AccountId}:role/${LambdaRoleName}'
       Runtime: nodejs20.x
       MemorySize: 1024
       Code:
