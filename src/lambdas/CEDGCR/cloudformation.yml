@@ -42,14 +42,3 @@ Resources:
           ENVIRONMENT: !Ref EnvironmentName
           AWS_ACCOUNT_ID: !Sub '${AWS::AccountId}'
       Timeout: 600
-
-  Schedule:
-    Type: AWS::Events::Rule
-    Properties:
-      Name: !Sub 'dialog-extream-batch-${EnvironmentName}-CEDGCR-Schedule'
-      Description: 'CEDGCR batch pre-processing schedule (1:30 AM Tue/Wed/Thurs/Fri/Sat AEST)'
-      ScheduleExpression: 'cron(30 1 ? TUE-SAT *)'
-      State: ENABLED
-      Targets:
-        - Arn: !GetAtt Lambda.Arn
-          Id: 'LambdaTarget'
