@@ -32,7 +32,7 @@ Resources:
       FunctionName: !Sub 'dialog-extream-batch-${EnvironmentName}-CEDGCR-Lambda'
       Handler: 'index.handler'
       Role: !Sub 'arn:aws:iam::${AWS::AccountId}:role/${LambdaRoleName}'
-      Runtime: nodejs12.x
+      Runtime: nodejs20.x
       MemorySize: 1024
       Code:
         S3Bucket: !Ref ArtifactsBucketName
