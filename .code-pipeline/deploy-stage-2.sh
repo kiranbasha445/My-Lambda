@@ -93,7 +93,9 @@ deploy_lambdas() {
             --capabilities CAPABILITY_NAMED_IAM \
             --parameter-overrides \
             "ZippedLambdaS3Key=${LAMBDA_CODE_ZIP_FILE_PATH_NO_LEADING_FORWARDSLASH}/${ZIPFILE}" \
-            "ArtifactsBucketName=${BUILD_ARTIFACT_BUCKET_PATH}"
+            "ArtifactsBucketName=${BUILD_ARTIFACT_BUCKET_PATH}" \
+            "EnvironmentName=${ENVIRONMENT_NAME}" \
+            "LambdaRoleName=My-Lambda-CEDRCR"
     fi
 }
 
