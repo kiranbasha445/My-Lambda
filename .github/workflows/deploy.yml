@@ -45,7 +45,7 @@ jobs:
 
       - name: Check for dist directories
         run: |
-          if [ "$(find src/lambda -name dist -type d)" ]; then
+          if [ "$(find src/lambda/*/dist -type d)" ]; then
             echo "dist directories exist"
           else
             echo "No dist directories found"
