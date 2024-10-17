@@ -43,15 +43,16 @@ jobs:
       - name: Build project
         run: npm run build
 
-      # Step 7: Archive build output (similar to file1 and file2)
-      - name: Archive build artifacts
-        run: zip -r lambda-build.zip ./*
+       # Step 7: Archive the entire repository
+      - name: Archive entire repository
+        run: zip -r lambda-build.zip .  # Zips everything in the current directory (root of the repo)
 
       # Step 8: Upload build artifacts (from file1)
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: lambda-build
+          path: lambda-build.zip
 
   deploy:
     runs-on: ubuntu-latest
