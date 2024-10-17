@@ -76,6 +76,17 @@ deploy_lambdas() {
         ZIPFILE="$(basename $DIR)_$(date +%s).zip"
         $DEBUG && echo "DEBUG: ZIPFILE=${ZIPFILE}"
 
+    if [ -d "${DIR}dist" ]; 
+    then
+    echo "Found dist directory at: ${DIR}dist"
+    cd ${DIR}dist
+    # Continue with zipping process
+    else
+    echo "ERROR: dist directory does not exist at ${DIR}dist"
+    exit 1
+    fi
+
+
         cd ${DIR}dist
         zip -r $ZIPFILE *
         mv $ZIPFILE $OLDPWD && cd $OLDPWD
