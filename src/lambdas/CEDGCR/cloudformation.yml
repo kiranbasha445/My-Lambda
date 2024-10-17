@@ -31,7 +31,6 @@ Resources:
     Properties:
       FunctionName: !Sub 'dialog-extream-batch-${EnvironmentName}-CEDGCR-Lambda'
       Handler: 'index.handler'
-      Role: !Sub 'arn:aws:iam::${AWS::AccountId}:role/${LambdaRoleName}'
       Runtime: nodejs20.x
       MemorySize: 1024
       Code:
