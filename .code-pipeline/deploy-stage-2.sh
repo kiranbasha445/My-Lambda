@@ -108,7 +108,7 @@ then
     exit 0
 fi
 
-CHANGED_LAMBDA_DIRECTORIES=$(git diff --dirstat=files,0 HEAD~l | grep src/lambdas | sed 's/^.* * //')
+CHANGED_LAMBDA_DIRECTORIES=$(git diff --dirstat=files,0 HEAD~1 | grep src/lambdas | sed 's/^.* * //')
 $DEBUG && echo "DEBUG: CHANGED_LAMBDA_DIRECTORIES=${CHANGED_LAMBDA_DIRECTORIES}"
 
 if [[ $CHANGED_LAMBDA_DIRECTORIES ]]
