@@ -43,6 +43,14 @@ jobs:
       - name: Build project
         run: npm run build
 
+      - name: Check for dist directories
+        run: |
+          if [ "$(find src/lambda -name dist -type d)" ]; then
+            echo "dist directories exist"
+          else
+            echo "No dist directories found"
+          fi
+
        # Step 7: Archive the entire repository
       - name: Archive entire repository
         run: zip -r lambda-build.zip .  # Zips everything in the current directory (root of the repo)
