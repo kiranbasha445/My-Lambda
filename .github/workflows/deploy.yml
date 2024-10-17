@@ -20,25 +20,29 @@ jobs:
       AWS_REGION: ap-south-1
 
     steps:
-      - name: Build
+      # Step 1: Checkout the repository
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      # Step 2: Set up Node.js environment
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
+      # Step 3: Build the project
+      - name: Build
         run: |
           npm install && \
           npm run lint && \
           npm run test && \
           npm run build
 
+      # Step 4: Deploy using deploy-stage-2.sh script
       - name: Deploy
         run: |
           chmod +x .code-pipeline/deploy-stage-2.sh && \
           bash .code-pipeline/deploy-stage-2.sh --environment ${{ env.ENVIRONMENT }} --application-name ${{ env.APPLICATION_NAME }} --debug true
-
-
-
+``
