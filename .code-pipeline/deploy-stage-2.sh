@@ -77,13 +77,13 @@ deploy_lambdas() {
         ZIPFILE="$(basename $DIR)_$(date +%s).zip"
         $DEBUG && echo "DEBUG: ZIPFILE=${ZIPFILE}"
 
-        cd ${DIR}dist
-        zip -r $ZIPFILE *
-        mv $ZIPFILE $OLDPWD && cd $OLDPWD
-
         # Print the files in the current directory
         echo "Files in the current directory:"
         ls -al  # List all files in the current directory
+
+        cd ${DIR}dist
+        zip -r $ZIPFILE *
+        mv $ZIPFILE $OLDPWD && cd $OLDPWD
 
         aws s3 cp ${ZIPFILE} s3://${BUILD_ARTIFACT_BUCKET_PATH}${LAMBDA_CODE_ZIP_FILE_PATH}/${ZIPFILE}
 
