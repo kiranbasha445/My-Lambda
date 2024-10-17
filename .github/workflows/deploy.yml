@@ -49,6 +49,8 @@ jobs:
             echo "dist directories exist"
           else
             echo "No dist directories found"
+            echo "Listing all files in the repository:"
+            find . -type f
           fi
 
        # Step 7: Archive the entire repository
