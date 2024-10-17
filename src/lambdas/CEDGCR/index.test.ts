@@ -9,7 +9,7 @@ describe('Lambda Function Tests', () => {
   const mockContext: Context = {} as Context;
   const mockCallback: Callback = () => { };
 
-  it('should return a success respons', async () => {
+  it('should return a success response', async () => {
     const response = await handler(mockEvent, mockContext, mockCallback);
 
     expect(response).toEqual({
