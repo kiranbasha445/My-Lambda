@@ -71,6 +71,7 @@ deploy_lambdas() {
 
     if [ -f "${DIR}/cloudformation.yml" ]
     then
+        $DEBUG && echo "DEBUG: directory${DIR}"
         LAMBDA_NAME=$(basename $DIR)
         $DEBUG && echo "DEBUG: LAMBDA_NAME=${LAMBDA_NAME}"
         ZIPFILE="$(basename $DIR)_$(date +%s).zip"
