@@ -78,6 +78,10 @@ jobs:
         with:
           name: lambda-build
 
+      # Step 3: Unzip the downloaded artifact
+    - name: Unzip build artifact
+      run: unzip lambda-build.zip -d ./lambdabuild
+
       # Step 3: Make the deploy script executable (from file2)
       - name: Make deploy script executable
         run: chmod +x .code-pipeline/deploy-stage-2.sh
