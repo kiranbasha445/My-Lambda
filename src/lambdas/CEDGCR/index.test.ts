@@ -15,7 +15,7 @@ describe('Lambda Function Tests', () => {
     expect(response).toEqual({
       statusCode: 200,
       body: JSON.stringify({
-        message: 'Lambda executed successfully',
+        message: 'Lambda executed successfully done',
         input: 'test-key'
       })
     });
