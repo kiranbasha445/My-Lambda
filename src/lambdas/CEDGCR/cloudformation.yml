@@ -53,4 +53,3 @@ Resources:
       Targets:
         - Arn: !GetAtt Lambda.Arn
           Id: 'LambdaTarget'
-          RoleArn: !Sub 'arn:aws:iam::${AWS::AccountId}:role/${LambdaSchedulerRole}'
