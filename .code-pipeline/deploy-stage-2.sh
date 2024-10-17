@@ -69,14 +69,14 @@ $DEBUG && echo "DEBUG: LAMBDA_CODE_ZIP_FILE_PATH_NO_LEADING_FORWARDSLASH=${LAMBD
 deploy_lambdas() {
     $DEBUG && echo "DEBUG: deploy_lambdas $1"
 
-    if [ -f "${DIR}/cloudformation.yml" ]
+    if [ -f "${DIR}cloudformation.yml" ]
     then
         LAMBDA_NAME=$(basename $DIR)
         $DEBUG && echo "DEBUG: LAMBDA_NAME=${LAMBDA_NAME}"
         ZIPFILE="$(basename $DIR)_$(date +%s).zip"
         $DEBUG && echo "DEBUG: ZIPFILE=${ZIPFILE}"
 
-        cd ${DIR}dist
+        cd ${DIR}/dist
         zip -r $ZIPFILE *
         mv $ZIPFILE $OLDPWD && cd $OLDPWD
 
@@ -99,7 +99,7 @@ $DEBUG && echo "DEBUG: CHANGED_SHARED_LAMBDA_CODE_DIRECTORIES=${CHANGED_SHARED_L
 if [[ $CHANGED_SHARED_LAMBDA_CODE_DIRECTORIES ]]
 then
     echo "Detected changes in shared code, deploying all lambdas"
-    ALL_LAMBDA_DIRECTORIES=$(ls -d -l "src/lambdas"/**/)
+    ALL_LAMBDA_DIRECTORIES=$(ls -d -1 "src/lambdas"/**/)
     for DIR in $ALL_LAMBDA_DIRECTORIES
     do
         deploy_lambdas $DIR
