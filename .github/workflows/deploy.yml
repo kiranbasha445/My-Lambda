@@ -3,10 +3,10 @@ name: CI and Deploy Lambdas
 on:
   push:
     branches:
-      - main
+      - test
   pull_request:
     branches:
-      - main
+      - test
 
 jobs:
   build:
@@ -29,7 +29,7 @@ jobs:
 
       # Step 3: Install dependencies (from file1)
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       # Step 4: Run linting (from file1)
       - name: Run lint
