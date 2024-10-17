@@ -94,7 +94,6 @@ deploy_lambdas() {
             --parameter-overrides \
             "ZippedLambdaS3Key=${LAMBDA_CODE_ZIP_FILE_PATH_NO_LEADING_FORWARDSLASH}/${ZIPFILE}" \
             "ArtifactsBucketName=${BUILD_ARTIFACT_BUCKET_PATH}"
-            $(cat ${DIR}${ENVIRONMENT_NAME}.parameters.properties)
     fi
 }
 
