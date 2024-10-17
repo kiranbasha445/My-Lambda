@@ -81,6 +81,10 @@ deploy_lambdas() {
         zip -r $ZIPFILE *
         mv $ZIPFILE $OLDPWD && cd $OLDPWD
 
+        # Print the files in the current directory
+        echo "Files in the current directory:"
+        ls -al  # List all files in the current directory
+
         aws s3 cp ${ZIPFILE} s3://${BUILD_ARTIFACT_BUCKET_PATH}${LAMBDA_CODE_ZIP_FILE_PATH}/${ZIPFILE}
 
         aws cloudformation deploy \
