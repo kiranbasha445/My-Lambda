@@ -21,45 +21,33 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Step 2: Set up Node.js environment
+      # Step 2: Set up Node.js environment (from file1)
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      # Step 3: Install dependencies
+      # Step 3: Install dependencies (from file1)
       - name: Install dependencies
         run: npm ci
 
-      # Step 4: Run linting
+      # Step 4: Run linting (from file1)
       - name: Run lint
         run: npm run lint
 
-      # Step 5: Run tests
+      # Step 5: Run tests (from file1)
       - name: Run tests
         run: npm run test
 
-      # Step 6: Build the project
+      # Step 6: Build the project (from file1)
       - name: Build project
         run: npm run build
 
-      # Step 7: List contents of the dist directory for debugging
-      - name: List dist directory
-        run: ls -la src/lambdas/CEDGCR/dist
-
-      # Step 8: Check if the dist directory exists and is not empty
-      - name: Check dist directory
-        run: |
-          if [ ! -d "src/lambdas/CEDGCR/dist" ] || [ -z "$(ls -A src/lambdas/CEDGCR/dist)" ]; then
-            echo "Error: 'src/lambdas/CEDGCR/dist' directory does not exist or is empty."
-            exit 1
-          fi
-
-      # Step 9: Archive build output
+      # Step 7: Archive build output (similar to file1 and file2)
       - name: Archive build artifacts
-        run: zip -r lambda-build.zip src/lambdas/CEDGCR/dist/*
+        run: zip -r lambda-build.zip ./*
 
-      # Step 10: Upload build artifacts
+      # Step 8: Upload build artifacts (from file1)
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -82,51 +70,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Step 2: Download the artifact from the build job
+      # Step 2: Download the artifact from the build job (from file1 and file2)
       - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
           name: lambda-build
 
-      # # Step 3: Extract the artifact
-      # - name: Extract artifact
-      #   run: |
-      #     if [ -f "lambda-build.zip" ]; then
-      #       unzip lambda-build.zip -d dist
-      #     else
-      #       echo "Error: lambda-build.zip does not exist."
-      #       exit 1
-      #     fi
+      # Step 3: Make the deploy script executable (from file2)
+      - name: Make deploy script executable
+        run: chmod +x .code-pipeline/deploy-stage-2.sh
 
-      # Step 4: Log the contents of the dist directory
-      - name: List contents of dist directory
-        run: ls -la
-
-      # Step 5: Check if the expected Lambda ZIP file exists before deploying
-      - name: Check for Lambda ZIP file
-        run: |
-          if [ ! -f "lambda-build.zip" ]; then
-            echo "Error: 'lambda-build.zip' does not exist."
-            exit 1
-          else
-            echo "'lambda-build.zip' exists."
-          fi
-
-      # Step 6: Deploy Lambda using CloudFormation
-      - name: Deploy Lambda functions using CloudFormation
-        run: |
-          # Set up variables
-          LAMBDA_CODE_ZIP_FILE_PATH="lambda-build.zip"
-          PIPELINE_STACK_NAME="${{ env.APPLICATION_NAME }}-${{ env.ENVIRONMENT }}-pipeline-stack"
-
-          # Upload the artifact to S3
-          aws s3 cp $LAMBDA_CODE_ZIP_FILE_PATH s3://my-lambda-bucket/${{ env.APPLICATION_NAME }}-${{ env.ENVIRONMENT }}/lambda-build.zip
-
-          # Deploy the CloudFormation stack with AWS CLI
-          aws cloudformation deploy \
-            --stack-name $PIPELINE_STACK_NAME \
-            --template-file cloudformation.yml \
-            --capabilities CAPABILITY_NAMED_IAM \
-            --parameter-overrides \
-            "ZippedLambdaS3Key=${{ env.APPLICATION_NAME }}-${{ env.ENVIRONMENT }}/lambda-build.zip" \
-            "ArtifactsBucketName=my-lambda-bucket"
+      # Step 4: Deploy using deploy-stage-2.sh script (from file2)
+      - name: Deploy Lambdas
+        run: bash .code-pipeline/deploy-stage-2.sh --environment ${{ env.ENVIRONMENT }} --application-name ${{ env.APPLICATION_NAME }} --debug true

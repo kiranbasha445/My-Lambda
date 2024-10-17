@@ -1,7 +1,6 @@
 #!/bin/bash
 set -e  # Exit immediately if any command fails
 
-
 # Purpose:
 # This script deploys the infrastructure common to all CIs.
 
@@ -15,9 +14,6 @@ set -e  # Exit immediately if any command fails
 
 # Example Usage:
 # ./deploy-stage-2.sh --application-name infra-starter --environment-name tbv --debug true
-
-
-
 
 echo "[START] Deployment started at $(date '+%Y-%m-%d %H:%M:%S')"
 
@@ -45,17 +41,18 @@ do
     shift
 done
 
- $DEBUG && echo "DEBUG: APPLICATION_NAME: $APPLICATION_NAME"
- $DEBUG && echo "DEBUG: ENVIRONMENT_NAME: $ENVIRONMENT_NAME"
+$DEBUG && echo "DEBUG: APPLICATION_NAME: $APPLICATION_NAME"
+$DEBUG && echo "DEBUG: ENVIRONMENT_NAME: $ENVIRONMENT_NAME"
 
 PIPELINE_STACK_NAME="${APPLICATION_NAME}-${ENVIRONMENT_NAME}-pipeline-stack"
 $DEBUG && echo "DEBUG: PIPELINE_STACK_NAME: $PIPELINE_STACK_NAME"
 
-# We use the Code Build artifact bucket to store our lambdas
-# Full list of Code Build environment variables can be found here
-# https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-env-vars.html
+# Use GitHub Actions variables for the S3 path
+GITHUB_RUN_ID=${GITHUB_RUN_ID:-"local-run"}
+GITHUB_SHA=${GITHUB_SHA:-"local-sha"}
 
-S3_PATH="$(echo ${CODEBUILD_SOURCE_VERSION} | awk -F':::' '{print $2}')"
+# Construct S3 path using GitHub Actions variables
+S3_PATH="${APPLICATION_NAME}/${ENVIRONMENT_NAME}/${GITHUB_RUN_ID}/${GITHUB_SHA}"
 $DEBUG && echo "DEBUG: S3_PATH: ${S3_PATH}"
 BUILD_ARTIFACT_BUCKET_PATH=$(echo $S3_PATH | awk -F'/' '{print $1}')
 $DEBUG && echo "DEBUG: BUILD_ARTIFACT_BUCKET_PATH=${BUILD_ARTIFACT_BUCKET_PATH}"
@@ -68,7 +65,6 @@ LAMBDA_CODE_ZIP_FILE_PATH="${S3_PATH_TO_BUILD_ARTIFACT}/lambdas"
 $DEBUG && echo "DEBUG: LAMBDA_CODE_ZIP_FILE_PATH=${LAMBDA_CODE_ZIP_FILE_PATH}"
 LAMBDA_CODE_ZIP_FILE_PATH_NO_LEADING_FORWARDSLASH=$(echo ${LAMBDA_CODE_ZIP_FILE_PATH} | sed 's,^/,,')
 $DEBUG && echo "DEBUG: LAMBDA_CODE_ZIP_FILE_PATH_NO_LEADING_FORWARDSLASH=${LAMBDA_CODE_ZIP_FILE_PATH_NO_LEADING_FORWARDSLASH}"
-
 
 deploy_lambdas() {
     $DEBUG && echo "DEBUG: deploy_lambdas $1"
@@ -84,16 +80,16 @@ deploy_lambdas() {
         zip -r $ZIPFILE *
         mv $ZIPFILE $OLDPWD && cd $OLDPWD
 
-        aws s3 cp ${ZIPFILE} s3://${BUILD_ARTIFACT_BUCKET_NAME}${LAMBDA_CODE_ZIP_FILE_PATH}/${ZIPFILE}
+        aws s3 cp ${ZIPFILE} s3://${BUILD_ARTIFACT_BUCKET_PATH}${LAMBDA_CODE_ZIP_FILE_PATH}/${ZIPFILE}
 
         aws cloudformation deploy \
             --stack-name ${APPLICATION_NAME}-${ENVIRONMENT_NAME}-${LAMBDA_NAME} \
             --template-file ${DIR}cloudformation.yml \
             --capabilities CAPABILITY_NAMED_IAM \
             --parameter-overrides \
-            "ZippedLambdaS3Key=${LAMBDA_CODE_ZIP_FILE_PATH_NO_LEADINGFORWARD_SLASH}/${ZIPFILE}" \
-            "ArtifactsBucketName=${BUILD_ARTIFACT_BUCKET_NAME}"
-            $(cat ${DIR}${ENVIRONMENT_NAME}.parameters.properties
+            "ZippedLambdaS3Key=${LAMBDA_CODE_ZIP_FILE_PATH_NO_LEADING_FORWARDSLASH}/${ZIPFILE}" \
+            "ArtifactsBucketName=${BUILD_ARTIFACT_BUCKET_PATH}"
+            $(cat ${DIR}${ENVIRONMENT_NAME}.parameters.properties)
     fi
 }
 
