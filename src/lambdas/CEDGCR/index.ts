@@ -19,7 +19,7 @@ export const handler: Handler = async (event: LambdaEvent) => {
     return {
       statusCode: 200,
       body: JSON.stringify({
-        message: 'Lambda executed successfully',
+        message: 'Lambda executed successfully done',
         input: key
       })
     };
