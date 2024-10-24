@@ -29,7 +29,7 @@ jobs:
       - name: Set up Environment
         uses: |
           actions/checkout@v3 && \
-          .github/workflows/env.yml
+          ./environment
 
       # Step 4: **Print Environment Variables for Debugging** 
       - name: Print Environment Variables
