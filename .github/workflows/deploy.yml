@@ -25,15 +25,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-
-      # Step 3: Build the project
-      - name: Build
-        run: |
-          npm install && \
-          npm run lint && \
-          npm run test && \
-          npm run build
-
       # Step 3: Call reusable workflow to set environment and AWS keys
       - name: Set Environment Variables
         uses: ./.github/workflows/env.yml
@@ -42,6 +33,15 @@ jobs:
       - name: Print Environment Variables
         run: |
           echo "Environment: ${{ env.ENVIRONMENT }}"
+          
+      # Step 3: Build the project
+      - name: Build
+        run: |
+          npm install && \
+          npm run lint && \
+          npm run test && \
+          npm run build
+
 
       # Step 4: Deploy using deploy-stage-2.sh script
       - name: Deploy
