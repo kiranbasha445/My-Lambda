@@ -36,7 +36,7 @@ jobs:
 
       # Step 3: Call reusable workflow to set environment and AWS keys
       - name: Set Environment Variables
-        uses: ./.github/workflows/env.yml
+        uses: .github/workflows/env-selection.yml
 
       # Step 4: **Print Environment Variables for Debugging** 
       - name: Print Environment Variables
