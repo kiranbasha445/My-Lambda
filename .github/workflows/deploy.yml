@@ -27,8 +27,8 @@ jobs:
           node-version: 20
       # Step 3: Call reusable workflow to set environment and AWS keys
       - name: Set up Environment
-        uses: actions/checkout@v4
-        uses: ./environment
+      - uses: actions/checkout@v4
+      - uses: ./environment
 
       # Step 4: **Print Environment Variables for Debugging** 
       - name: Print Environment Variables
