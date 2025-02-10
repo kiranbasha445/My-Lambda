@@ -1,98 +1,93 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: 'Deploys Lambda function with API Gateway integration'
+Description: 'Deploy API Gateway with a POST endpoint to invoke Lambda'
 
 Parameters:
   EnvironmentName:
     Type: String
-    Description: 'Name of the environment'
+    Description: '[Required] Name of the environment'
     AllowedValues:
       - dev
       - staging
 
   ArtifactsBucketName:
     Type: String
-    Description: 'S3 bucket for storing Lambda zip files'
+    Description: 'S3 bucket storing Lambda zip files'
 
   ZippedLambdaS3Key:
     Type: String
-    Description: 'S3 key for the zipped Lambda package'
+    Description: 'S3 path of the Lambda zip file'
 
   LambdaRoleName:
     Type: String
-    Description: 'IAM role name for the Lambda function'
-
-Conditions:
-  IsSupportedRegion: !Equals
-    - !Sub '${AWS::Region}'
-    - ap-south-1
+    Description: 'IAM role for Lambda function'
 
 Resources:
-  LambdaFunction:
+  ## 🟢 Lambda Function
+  HelloLambda:
     Type: AWS::Lambda::Function
-    Condition: IsSupportedRegion
     Properties:
-      FunctionName: !Sub 'dialog-extream-batch-${EnvironmentName}-CEDGCR-Lambda'
+      FunctionName: !Sub 'hello-api-${EnvironmentName}'
       Handler: 'index.handler'
       Role: !Sub 'arn:aws:iam::${AWS::AccountId}:role/${LambdaRoleName}'
       Runtime: nodejs20.x
       MemorySize: 1024
-      Timeout: 600
       Code:
         S3Bucket: !Ref ArtifactsBucketName
         S3Key: !Ref ZippedLambdaS3Key
       Environment:
         Variables:
           ENVIRONMENT: !Ref EnvironmentName
-          AWS_ACCOUNT_ID: !Sub '${AWS::AccountId}'
+      Timeout: 600
 
-  ApiGatewayRestApi:
+  ## 🟢 API Gateway REST API
+  HelloApi:
     Type: AWS::ApiGateway::RestApi
     Properties:
-      Name: !Sub 'dialog-extream-batch-${EnvironmentName}-CEDGCR-API'
-      Description: 'API Gateway for invoking the Lambda function'
-      FailOnWarnings: true
+      Name: !Sub 'hello-api-${EnvironmentName}'
+      Description: 'API Gateway for Hello endpoint'
 
-  ApiGatewayResource:
+  ## 🟢 API Resource (/hello)
+  HelloResource:
     Type: AWS::ApiGateway::Resource
     Properties:
-      RestApiId: !Ref ApiGatewayRestApi
-      ParentId: !GetAtt ApiGatewayRestApi.RootResourceId
-      PathPart: 'hello'
+      RestApiId: !Ref HelloApi
+      ParentId: !GetAtt HelloApi.RootResourceId
+      PathPart: hello # This makes the endpoint: /hello
 
-  ApiGatewayMethod:
+  ## 🟢 POST Method for /hello
+  HelloPostMethod:
     Type: AWS::ApiGateway::Method
     Properties:
-      RestApiId: !Ref ApiGatewayRestApi
-      ResourceId: !Ref ApiGatewayResource
+      RestApiId: !Ref HelloApi
+      ResourceId: !Ref HelloResource
       HttpMethod: POST
-      AuthorizationType: NONE
+      AuthorizationType: NONE # No authentication required (modify if needed)
       Integration:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
         Uri: !Sub
           - 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaArn}/invocations'
-          - LambdaArn: !GetAtt LambdaFunction.Arn
+          - LambdaArn: !GetAtt HelloLambda.Arn
 
-  ApiGatewayDeployment:
+  ## 🟢 Deployment & Stage
+  HelloApiDeployment:
     Type: AWS::ApiGateway::Deployment
-    DependsOn: ApiGatewayMethod
+    DependsOn: HelloPostMethod
     Properties:
-      RestApiId: !Ref ApiGatewayRestApi
+      RestApiId: !Ref HelloApi
       StageName: !Ref EnvironmentName
 
-  ApiGatewayInvokePermission:
+  ## 🟢 Permission for API Gateway to Invoke Lambda
+  LambdaApiPermission:
     Type: AWS::Lambda::Permission
     Properties:
-      FunctionName: !Ref LambdaFunction
       Action: lambda:InvokeFunction
+      FunctionName: !Ref HelloLambda
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGatewayRestApi}/*'
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${HelloApi}/*/POST/hello'
 
 Outputs:
-  LambdaFunctionArn:
-    Description: 'ARN of the deployed Lambda function'
-    Value: !GetAtt LambdaFunction.Arn
-
-  ApiGatewayInvokeUrl:
-    Description: 'API Gateway Invoke URL'
-    Value: !Sub 'https://${ApiGatewayRestApi}.execute-api.${AWS::Region}.amazonaws.com/${EnvironmentName}/hello'
+  ## 🟢 API Gateway Invoke URL
+  HelloApiInvokeUrl:
+    Description: 'Invoke URL for the Hello API'
+    Value: !Sub 'https://${HelloApi}.execute-api.${AWS::Region}.amazonaws.com/${EnvironmentName}/hello'
