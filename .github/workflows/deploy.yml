@@ -3,10 +3,7 @@ name: CI and Deploy Lambdas
 on:
   push:
     branches:
-      - main
       - staging
-      - test
-      - dev
 
 jobs:
   deployLambdas:
@@ -15,6 +12,8 @@ jobs:
     env:
       APPLICATION_NAME: my-batch-lambdas
       AWS_REGION: ap-south-1
+      AWS_ACCESS_KEY_ID: "YOUR_HARD_CODED_ACCESS_KEY"
+      AWS_SECRET_ACCESS_KEY: "YOUR_HARD_CODED_SECRET_KEY"
 
     steps:
       # Step 1: Checkout the repository
@@ -29,35 +28,16 @@ jobs:
         with:
           node-version: 20
 
-      - name: Set environment variables based on branch
+      - name: Set environment variables for staging
         run: |
-          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
-            echo "ENVIRONMENT=prod" >> $GITHUB_ENV
-            echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID_DEV }}" >> $GITHUB_ENV
-            echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY_DEV }}" >> $GITHUB_ENV
-          elif [ "${{ github.ref }}" == "refs/heads/staging" ]; then
-            echo "ENVIRONMENT=staging" >> $GITHUB_ENV
-            echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID_DEV }}" >> $GITHUB_ENV
-            echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY_DEV }}" >> $GITHUB_ENV
-          elif [ "${{ github.ref }}" == "refs/heads/test" ]; then
-            echo "ENVIRONMENT=test" >> $GITHUB_ENV
-            echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID_DEV }}" >> $GITHUB_ENV
-            echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY_DEV }}" >> $GITHUB_ENV
-          else
-            echo "ENVIRONMENT=dev" >> $GITHUB_ENV
-            echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID_DEV }}" >> $GITHUB_ENV
-            echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY_DEV }}" >> $GITHUB_ENV
-          fi
-      - name: Debug Secrets
+          echo "ENVIRONMENT=staging" >> $GITHUB_ENV
+          echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID_DEV }}" >> $GITHUB_ENV
+          echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY_DEV }}" >> $GITHUB_ENV
+
+      - name: Debug AWS Credentials
         run: |
           echo "Environment: ${{ env.ENVIRONMENT }}"
           echo "AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}"
-          echo "AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}"
-
-      # Step 4: **Print Environment Variables for Debugging** 
-      - name: Print Environment Variables
-        run: |
-          echo "Environment: ${{ env.ENVIRONMENT }}"
 
       # Step 3: Build the project
       - name: Build
@@ -66,7 +46,6 @@ jobs:
           npm run lint && \
           npm run test && \
           npm run build
-
 
       # Step 4: Deploy using deploy-stage-2.sh script
       - name: Deploy
