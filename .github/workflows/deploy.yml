@@ -11,7 +11,7 @@ on:
 jobs:
   deployLambdas:
     runs-on: ubuntu-latest
-
+    envrironment: dev
     env:
       APPLICATION_NAME: my-batch-lambdas
       AWS_REGION: ap-south-1

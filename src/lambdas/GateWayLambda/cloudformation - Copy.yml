@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: 'Dialog Extream CEDGCR Batch Lambda'
+Description: 'Dialog Extream ApiGateWay Batch Lambda'
 
 Parameters:
   EnvironmentName:
@@ -29,7 +29,7 @@ Resources:
     Condition: IsSupportedRegion
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: !Sub 'dialog-extream-batch-${EnvironmentName}-CEDGCR-Lambda'
+      FunctionName: !Sub 'dialog-extream-batch-${EnvironmentName}-ApiGateWay-Lambda'
       Handler: 'index.handler'
       Role: !Sub 'arn:aws:iam::${AWS::AccountId}:role/${LambdaRoleName}'
       Runtime: nodejs20.x
