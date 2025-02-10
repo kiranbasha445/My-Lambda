@@ -1,23 +1,25 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: 'Dialog Extream CEDGCR Batch Lambda'
+Description: 'Deploys Lambda function with API Gateway integration'
 
 Parameters:
   EnvironmentName:
     Type: String
-    Description: '[Required] Name of the environment'
+    Description: 'Name of the environment'
     AllowedValues:
       - dev
       - staging
 
   ArtifactsBucketName:
     Type: String
-    Description: 'Name of the bucket created by the Service Catalog Pipeline stack used for Lambda zip storage'
+    Description: 'S3 bucket for storing Lambda zip files'
+
   ZippedLambdaS3Key:
     Type: String
-    Description: 'The full S3 path to the location of the zipped Lambda code'
+    Description: 'S3 key for the zipped Lambda package'
+
   LambdaRoleName:
     Type: String
-    Description: 'The name of the IAM role to be used by the Lambda'
+    Description: 'IAM role name for the Lambda function'
 
 Conditions:
   IsSupportedRegion: !Equals
@@ -25,15 +27,16 @@ Conditions:
     - ap-south-1
 
 Resources:
-  Lambda:
-    Condition: IsSupportedRegion
+  LambdaFunction:
     Type: AWS::Lambda::Function
+    Condition: IsSupportedRegion
     Properties:
       FunctionName: !Sub 'dialog-extream-batch-${EnvironmentName}-CEDGCR-Lambda'
       Handler: 'index.handler'
       Role: !Sub 'arn:aws:iam::${AWS::AccountId}:role/${LambdaRoleName}'
       Runtime: nodejs20.x
       MemorySize: 1024
+      Timeout: 600
       Code:
         S3Bucket: !Ref ArtifactsBucketName
         S3Key: !Ref ZippedLambdaS3Key
@@ -41,4 +44,55 @@ Resources:
         Variables:
           ENVIRONMENT: !Ref EnvironmentName
           AWS_ACCOUNT_ID: !Sub '${AWS::AccountId}'
-      Timeout: 600
+
+  ApiGatewayRestApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: !Sub 'dialog-extream-batch-${EnvironmentName}-CEDGCR-API'
+      Description: 'API Gateway for invoking the Lambda function'
+      FailOnWarnings: true
+
+  ApiGatewayResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ApiGatewayRestApi
+      ParentId: !GetAtt ApiGatewayRestApi.RootResourceId
+      PathPart: 'invoke'
+
+  ApiGatewayMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ApiGatewayRestApi
+      ResourceId: !Ref ApiGatewayResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub
+          - 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaArn}/invocations'
+          - LambdaArn: !GetAtt LambdaFunction.Arn
+
+  ApiGatewayDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn: ApiGatewayMethod
+    Properties:
+      RestApiId: !Ref ApiGatewayRestApi
+      StageName: !Ref EnvironmentName
+
+  ApiGatewayInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref LambdaFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGatewayRestApi}/*'
+
+Outputs:
+  LambdaFunctionArn:
+    Description: 'ARN of the deployed Lambda function'
+    Value: !GetAtt LambdaFunction.Arn
+
+  ApiGatewayInvokeUrl:
+    Description: 'API Gateway Invoke URL'
+    Value: !Sub 'https://${ApiGatewayRestApi}.execute-api.${AWS::Region}.amazonaws.com/${EnvironmentName}/invoke'
