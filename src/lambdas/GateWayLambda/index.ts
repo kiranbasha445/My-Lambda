@@ -15,7 +15,6 @@ export const handler: Handler = async (event: LambdaEvent) => {
     // Example logic - you can replace this with your actual functionality
     console.log(`Processing event for key : ${key}`);
 
-
     // Simulate success
     return {
       statusCode: 200,
