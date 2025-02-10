@@ -7,7 +7,7 @@ Parameters:
     Description: '[Required] Name of the environment'
     AllowedValues:
       - dev
-      - test
+      - staging
 
   ArtifactsBucketName:
     Type: String
