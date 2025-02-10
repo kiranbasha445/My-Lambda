@@ -12,6 +12,7 @@ export const handler: Handler = async (event: LambdaEvent) => {
     // Extract relevant data from the event
     const { key } = event;
 
+
     // Example logic - you can replace this with your actual functionality
     console.log(`Processing event for key: ${key}`);
 
