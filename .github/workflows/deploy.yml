@@ -14,6 +14,7 @@ jobs:
       AWS_REGION: ap-south-1
       AWS_ACCESS_KEY_ID: "YOUR_HARD_CODED_ACCESS_KEY"
       AWS_SECRET_ACCESS_KEY: "YOUR_HARD_CODED_SECRET_KEY"
+      ENVIRONMENT: staging
 
     steps:
       # Step 1: Checkout the repository
