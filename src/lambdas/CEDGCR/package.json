@@ -1,5 +1,5 @@
 {
-  "name": "@My-Lambda/ApiGateWayBatchLambda",
+  "name": "@My-Lambda/CEDGCRBatchLambda",
   "scripts": {
     "test": "jest",
     "bundle": "webpack",

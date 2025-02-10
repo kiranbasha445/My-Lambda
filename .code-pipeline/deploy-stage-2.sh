@@ -79,7 +79,7 @@ deploy_lambdas() {
 
         # Print the files in the current directory
         echo "Files in the current directory:"
-        ls -al src/lambdas/ApiGateWay/
+        ls -al src/lambdas/CEDGCR/
 
         cd ${DIR}dist
         zip -r $ZIPFILE *
