@@ -69,19 +69,25 @@ $DEBUG && echo "DEBUG: LAMBDA_CODE_ZIP_FILE_PATH_NO_LEADING_FORWARDSLASH=${LAMBD
 deploy_lambdas() {
     $DEBUG && echo "DEBUG: deploy_lambdas $1"
 
-    if [ -f "${DIR}/cloudformation.yml" ]
+    if [ -f "${DIR}cloudformation.yml" ]
     then
-        $DEBUG && echo "DEBUG: directory${DIR}"
         LAMBDA_NAME=$(basename $DIR)
         $DEBUG && echo "DEBUG: LAMBDA_NAME=${LAMBDA_NAME}"
         ZIPFILE="$(basename $DIR)_$(date +%s).zip"
         $DEBUG && echo "DEBUG: ZIPFILE=${ZIPFILE}"
 
-        # Print the files in the current directory
-        echo "Files in the current directory:"
-        ls -al lambdabuild/src/lambdas/CEDGCR/
+    if [ -d "${DIR}dist" ]; 
+    then
+    echo "Found dist directory at: ${DIR}dist"
+    cd ${DIR}dist
+    # Continue with zipping process
+    else
+    echo "ERROR: dist directory does not exist at ${DIR}dist"
+    exit 1
+    fi
 
-        cd lambdabuild/${DIR}dist
+
+        cd ${DIR}dist
         zip -r $ZIPFILE *
         mv $ZIPFILE $OLDPWD && cd $OLDPWD
 
@@ -93,9 +99,8 @@ deploy_lambdas() {
             --capabilities CAPABILITY_NAMED_IAM \
             --parameter-overrides \
             "ZippedLambdaS3Key=${LAMBDA_CODE_ZIP_FILE_PATH_NO_LEADING_FORWARDSLASH}/${ZIPFILE}" \
-            "ArtifactsBucketName=${BUILD_ARTIFACT_BUCKET_PATH}" \
-            "EnvironmentName=${ENVIRONMENT_NAME}" \
-            "LambdaRoleName=My-Lambda-CEDRCR"
+            "ArtifactsBucketName=${BUILD_ARTIFACT_BUCKET_PATH}"
+            $(cat ${DIR}${ENVIRONMENT_NAME}.parameters.properties)
     fi
 }
 
@@ -105,7 +110,7 @@ $DEBUG && echo "DEBUG: CHANGED_SHARED_LAMBDA_CODE_DIRECTORIES=${CHANGED_SHARED_L
 if [[ $CHANGED_SHARED_LAMBDA_CODE_DIRECTORIES ]]
 then
     echo "Detected changes in shared code, deploying all lambdas"
-    ALL_LAMBDA_DIRECTORIES=$(ls -d -l "src/lambdas"/**/)
+    ALL_LAMBDA_DIRECTORIES=$(ls -d -1 "src/lambdas"/**/)
     for DIR in $ALL_LAMBDA_DIRECTORIES
     do
         deploy_lambdas $DIR

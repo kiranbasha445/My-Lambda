@@ -1,7 +1,7 @@
 import { handler } from './index';
 import { Context, Callback } from 'aws-lambda';
 
-describe('Lambda Function Test', () => {
+describe('Lambda Function Tests', () => {
   const mockEvent = {
     key: 'test-key'
   };

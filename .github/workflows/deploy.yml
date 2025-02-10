@@ -43,9 +43,13 @@ jobs:
       - name: Build project
         run: npm run build
 
-       # Step 7: Archive the entire repository
-      - name: Archive entire repository
-        run: zip -r lambda-build.zip .  # Zips everything in the current directory (root of the repo)
+      # Step 7: List all files after build (log added)
+      - name: List build files
+        run: ls -R
+
+      # Step 7: Archive build output (similar to file1 and file2)
+      - name: Archive build artifacts
+        run: zip -r lambda-build.zip ./*
 
       # Step 8: Upload build artifacts (from file1)
       - name: Upload build artifacts
@@ -78,14 +82,14 @@ jobs:
         with:
           name: lambda-build
 
-      # Step 4: Unzip the downloaded artifact
-      - name: Unzip build artifact
-        run: unzip lambda-build.zip -d ./lambdabuild
+      # Step 3: List all files in the workspace (log added)
+      - name: List deploy files
+        run: ls -R
 
-      # Step 5: Make the deploy script executable (from file2)
+      # Step 3: Make the deploy script executable (from file2)
       - name: Make deploy script executable
         run: chmod +x .code-pipeline/deploy-stage-2.sh
 
-      # Step 6: Deploy using deploy-stage-2.sh script (from file2)
+      # Step 4: Deploy using deploy-stage-2.sh script (from file2)
       - name: Deploy Lambdas
         run: bash .code-pipeline/deploy-stage-2.sh --environment ${{ env.ENVIRONMENT }} --application-name ${{ env.APPLICATION_NAME }} --debug true
