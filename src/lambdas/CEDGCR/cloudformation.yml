@@ -57,7 +57,7 @@ Resources:
     Properties:
       RestApiId: !Ref ApiGatewayRestApi
       ParentId: !GetAtt ApiGatewayRestApi.RootResourceId
-      PathPart: 'invoke'
+      PathPart: 'hello'
 
   ApiGatewayMethod:
     Type: AWS::ApiGateway::Method
@@ -95,4 +95,4 @@ Outputs:
 
   ApiGatewayInvokeUrl:
     Description: 'API Gateway Invoke URL'
-    Value: !Sub 'https://${ApiGatewayRestApi}.execute-api.${AWS::Region}.amazonaws.com/${EnvironmentName}/invoke'
+    Value: !Sub 'https://${ApiGatewayRestApi}.execute-api.${AWS::Region}.amazonaws.com/${EnvironmentName}/hello'
