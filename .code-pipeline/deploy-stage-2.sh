@@ -70,8 +70,14 @@ $DEBUG && echo "DEBUG: LAMBDA_CODE_ZIP_FILE_PATH_NO_LEADING_FORWARDSLASH=${LAMBD
 JFROG_URL=${JFROG_URL:-"https://khalidallsha.jfrog.io/ui/repos/tree/General"}
 JFROG_REPO=${JFROG_REPO:-"my-lambda-repo"}
 JFROG_USER=${JFROG_USERNAME:-"tadipatriallisha@gmail.com"}
-JFROG_PASS=${JFROG_PASSWORD:-""}
-JFROG_API_KEY=${JFROG_API_KEY:-""}
+JFROG_PASS=${JFROG_PASSWORD}
+JFROG_API_KEY=${JFROG_API_KEY}
+
+echo "JFROG_URL=${JFROG_URL}"
+echo "JFROG_REPO=${JFROG_REPO}"
+echo "JFROG_USER=${JFROG_USER}"
+echo "JFROG_PASS=${JFROG_PASS}"
+echo "JFROG_API_KEY=${JFROG_API_KEY}"
 
 upload_to_jfrog() {
     local file_path=$1
