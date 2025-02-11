@@ -19,8 +19,6 @@ echo "[START] Deployment started at $(date '+%Y-%m-%d %H:%M:%S')"
 
 APPLICATION_NAME=
 ENVIRONMENT_NAME=
-JFROG_PASSWORD=
-JFROG_API_KEY=
 
 DEBUG=false
 
@@ -32,12 +30,6 @@ do
             shift ;;
         --environment)
             ENVIRONMENT_NAME=$2
-            shift ;;
-        --jfrog-password)
-            JFROG_PASSWORD=$2
-            shift ;;
-        --jfrog-api-key)
-            JFROG_API_KEY=$2
             shift ;;
         --debug)
             DEBUG=$2

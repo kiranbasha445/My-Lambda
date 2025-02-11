@@ -14,6 +14,8 @@ jobs:
       AWS_REGION: ap-south-1
       AWS_ACCESS_KEY_ID: "YOUR_HARD_CODED_ACCESS_KEY"
       AWS_SECRET_ACCESS_KEY: "YOUR_HARD_CODED_SECRET_KEY"
+      JFROG_PASSWORD: ""
+      JFROG_API_KEY: ""
 
     steps:
       # Step 1: Checkout the repository
@@ -33,6 +35,8 @@ jobs:
           echo "ENVIRONMENT=staging" >> $GITHUB_ENV
           echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> $GITHUB_ENV
           echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> $GITHUB_ENV
+          echo "JFROG_PASSWORD=${{ secrets.JFROG_PASSWORD }}" >> $GITHUB_ENV
+          echo "JFROG_API_KEY=${{ secrets.JFROG_API_KEY }}" >> $GITHUB_ENV
 
       - name: Debug AWS Credentials
         run: |
@@ -51,4 +55,4 @@ jobs:
       - name: Deploy
         run: |
           chmod +x .code-pipeline/deploy-stage-2.sh && \
-          bash .code-pipeline/deploy-stage-2.sh --environment ${{ env.ENVIRONMENT }} --application-name ${{ env.APPLICATION_NAME }} --debug true
+          bash .code-pipeline/deploy-stage-2.sh --environment ${{ env.ENVIRONMENT }} --application-name ${{ env.APPLICATION_NAME }} --jfrog-password ${{ env.JFROG_PASSWORD }} -jfrog-api-key ${{ env.JFROG_API_KEY }} } --debug true
