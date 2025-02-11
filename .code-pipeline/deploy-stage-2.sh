@@ -76,7 +76,7 @@ JFROG_API_KEY=${JFROG_API_KEY}
 echo "JFROG_URL=${JFROG_URL}"
 echo "JFROG_REPO=${JFROG_REPO}"
 echo "JFROG_USER=${JFROG_USER}"
-echo "JFROG_PASS=${JFROG_PASS}"
+echo "JFROG_PASS=${JFROG_PASSWORD}"
 
 upload_to_jfrog() {
     local file_path=$1
