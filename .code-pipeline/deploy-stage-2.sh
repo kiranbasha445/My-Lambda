@@ -137,7 +137,7 @@ deploy_lambdas() {
         #     "LambdaRoleName=My-Lambda-CEDRCR"
 	
         # Upload to JFrog
-        upload_to_jfrog "${ZIPFILE}"
+        #upload_to_jfrog "${ZIPFILE}"
     fi
 }
 
