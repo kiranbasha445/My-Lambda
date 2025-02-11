@@ -67,7 +67,7 @@ LAMBDA_CODE_ZIP_FILE_PATH_NO_LEADING_FORWARDSLASH=$(echo ${LAMBDA_CODE_ZIP_FILE_
 $DEBUG && echo "DEBUG: LAMBDA_CODE_ZIP_FILE_PATH_NO_LEADING_FORWARDSLASH=${LAMBDA_CODE_ZIP_FILE_PATH_NO_LEADING_FORWARDSLASH}"
 
 # JFrog Artifactory Details
-JFROG_URL=${JFROG_URL:-"https://khalidallsha.jfrog.io/ui/repos/tree/General"}
+JFROG_URL=${JFROG_URL:-"https://khalidallsha.jfrog.io/artifactor"}
 JFROG_REPO=${JFROG_REPO:-"my-lambda-repo"}
 JFROG_USER=${JFROG_USERNAME:-"tadipatriallisha@gmail.com"}
 JFROG_PASS=${JFROG_PASSWORD}
@@ -77,7 +77,6 @@ echo "JFROG_URL=${JFROG_URL}"
 echo "JFROG_REPO=${JFROG_REPO}"
 echo "JFROG_USER=${JFROG_USER}"
 echo "JFROG_PASS=${JFROG_PASS}"
-echo "JFROG_API_KEY=${JFROG_API_KEY}"
 
 upload_to_jfrog() {
     local file_path=$1
