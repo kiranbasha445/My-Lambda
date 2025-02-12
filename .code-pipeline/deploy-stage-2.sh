@@ -75,35 +75,33 @@ LAMBDA_CODE_ZIP_FILE_PATH_NO_LEADING_FORWARDSLASH=$(echo ${LAMBDA_CODE_ZIP_FILE_
 $DEBUG && echo "DEBUG: LAMBDA_CODE_ZIP_FILE_PATH_NO_LEADING_FORWARDSLASH=${LAMBDA_CODE_ZIP_FILE_PATH_NO_LEADING_FORWARDSLASH}"
 
 # JFrog Artifactory Details
-JFROG_URL=${JFROG_URL:-"https://khalidallsha.jfrog.io/artifactory/lambda"}
+JFROG_URL=${JFROG_URL:-"https://khalidallsha.jfrog.io/artifactory/api/npm/lambda"}
 JFROG_REPO=${JFROG_REPO:-"my-lambda-repo"}
 JFROG_USER=${JFROG_USERNAME:-"tadipatriallisha@gmail.com"}
-JFROG_PASS=${JFROG_PASSWORD}
 JFROG_API_KEY=${JFROG_API_KEY}
 
 echo "JFROG_URL=${JFROG_URL}"
 echo "JFROG_REPO=${JFROG_REPO}"
 echo "JFROG_USER=${JFROG_USER}"
-echo "JFROG_PASS=${JFROG_PASSWORD}"
 
 upload_to_jfrog() {
     local file_path=$1
     local file_name=$(basename "$file_path")
-
+    
     $DEBUG && echo "DEBUG: Uploading $file_name to JFrog"
 
-    if [[ -n "$JFROG_API_KEY" ]]; then
-        curl -H "X-JFrog-Art-Api:$JFROG_API_KEY" \
+    local upload_url="${JFROG_URL}/${JFROG_REPO}/${file_name}"
+    
+    if [[ -n "$JFROG_USER" && -n "$JFROG_API_KEY" ]]; then
+        curl -v -u "$JFROG_USER:$JFROG_API_KEY" \
              -T "$file_path" \
-             "${JFROG_URL}/${JFROG_REPO}/${APPLICATION_NAME}/${ENVIRONMENT_NAME}/${GITHUB_RUN_ID}/${file_name}"
-    elif [[ -n "$JFROG_USER" && -n "$JFROG_PASS" ]]; then
-        curl -u "$JFROG_USER:$JFROG_PASS" \
-             -T "$file_path" \
-             "${JFROG_URL}/${JFROG_REPO}/${APPLICATION_NAME}/${ENVIRONMENT_NAME}/${GITHUB_RUN_ID}/${file_name}"
+             "$upload_url"
     else
         echo "ERROR: JFrog credentials not found. Skipping JFrog upload."
+        return 1
     fi
 }
+
 
 deploy_lambdas() {
     $DEBUG && echo "DEBUG: deploy_lambdas $1"
