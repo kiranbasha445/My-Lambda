@@ -1,0 +1,23 @@
+import { handler } from './index';
+import { Context, Callback } from 'aws-lambda';
+
+describe('Lambda Function Test', () => {
+  const mockEvent = {
+    key: 'test-key'
+  };
+
+  const mockContext: Context = {} as Context;
+  const mockCallback: Callback = () => { };
+
+  it('should return a success respons', async () => {
+    const response = await handler(mockEvent, mockContext, mockCallback);
+
+    expect(response).toEqual({
+      statusCode: 200,
+      body: JSON.stringify({
+        message: 'Lambda executed successfully done',
+        input: 'test-key'
+      })
+    });
+  });
+});
