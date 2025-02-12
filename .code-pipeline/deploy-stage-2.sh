@@ -102,33 +102,73 @@ echo "JFROG_USER=${JFROG_USER}"
 #     fi
 # }
 
+# upload_to_jfrog() {
+#     local file_path=$1
+#     local lambda_name=$2
+
+#     # Get the latest version from JFrog and increment it
+#     local latest_version=$(curl -s -u "$JFROG_USER:$JFROG_API_KEY" \
+#         "${JFROG_URL}/${JFROG_REPO}/${lambda_name}/" | grep -o '"uri":"/[^"]*"' | awk -F'/' '{print $NF}' | grep -o 'V[0-9]\+' | sed 's/V//' | sort -n | tail -n1)
+
+    
+#     local new_version=1
+#     if [[ -n "$latest_version" ]]; then
+#         new_version=$((latest_version + 1))
+#     fi
+
+#     local versioned_filename="${lambda_name}V${new_version}.zip"
+#     local upload_url="${JFROG_URL}/${JFROG_REPO}/${lambda_name}/${versioned_filename}"
+
+#     $DEBUG && echo "DEBUG: Uploading $versioned_filename to JFrog at $upload_url"
+
+#     if [[ -n "$JFROG_USER" && -n "$JFROG_API_KEY" ]]; then
+#         curl -v -u "$JFROG_USER:$JFROG_API_KEY" \
+#              -T "$file_path" \
+#              "$upload_url"
+#     else
+#         echo "ERROR: JFrog credentials not found. Skipping JFrog upload."
+#         return 1
+#     fi
+# }
+
 upload_to_jfrog() {
     local file_path=$1
     local lambda_name=$2
 
     # Get the latest version from JFrog and increment it
     local latest_version=$(curl -s -u "$JFROG_USER:$JFROG_API_KEY" \
-        "${JFROG_URL}/${JFROG_REPO}/${lambda_name}/" | grep -o '"uri":"/[^"]*"' | awk -F'/' '{print $NF}' | grep -o 'V[0-9]\+' | sed 's/V//' | sort -n | tail -n1)
-    
+        "${JFROG_URL}/${JFROG_REPO}/${lambda_name}/" | 
+        grep -o "${lambda_name}V[0-9]\+\.zip" |  # Extract filenames
+        grep -o 'V[0-9]\+' |                    # Extract version part
+        sed 's/V//' | sort -n | tail -n1)       # Sort and get highest
+
     local new_version=1
     if [[ -n "$latest_version" ]]; then
         new_version=$((latest_version + 1))
     fi
 
+    echo "Latest version: V$latest_version"
+    echo "Next version: V$new_version"  
+
     local versioned_filename="${lambda_name}V${new_version}.zip"
     local upload_url="${JFROG_URL}/${JFROG_REPO}/${lambda_name}/${versioned_filename}"
 
-    $DEBUG && echo "DEBUG: Uploading $versioned_filename to JFrog at $upload_url"
+    echo "Uploading $versioned_filename to JFrog at $upload_url"
 
-    if [[ -n "$JFROG_USER" && -n "$JFROG_API_KEY" ]]; then
-        curl -v -u "$JFROG_USER:$JFROG_API_KEY" \
-             -T "$file_path" \
-             "$upload_url"
-    else
+    if [[ -z "$JFROG_USER" || -z "$JFROG_API_KEY" ]]; then
         echo "ERROR: JFrog credentials not found. Skipping JFrog upload."
         return 1
     fi
+
+    # Upload file to JFrog
+    if curl -v -u "$JFROG_USER:$JFROG_API_KEY" -T "$file_path" "$upload_url"; then
+        echo "Upload successful: $versioned_filename"
+    else
+        echo "ERROR: Failed to upload $versioned_filename to JFrog."
+        return 1
+    fi
 }
+
 
 
 
