@@ -84,53 +84,6 @@ echo "JFROG_URL=${JFROG_URL}"
 echo "JFROG_REPO=${JFROG_REPO}"
 echo "JFROG_USER=${JFROG_USER}"
 
-# upload_to_jfrog() {
-#     local file_path=$1
-#     local file_name=$(basename "$file_path")
-    
-#     $DEBUG && echo "DEBUG: Uploading $file_name to JFrog"
-
-#     local upload_url="${JFROG_URL}/${JFROG_REPO}/${file_name}"
-    
-#     if [[ -n "$JFROG_USER" && -n "$JFROG_API_KEY" ]]; then
-#         curl -v -u "$JFROG_USER:$JFROG_API_KEY" \
-#              -T "$file_path" \
-#              "$upload_url"
-#     else
-#         echo "ERROR: JFrog credentials not found. Skipping JFrog upload."
-#         return 1
-#     fi
-# }
-
-# upload_to_jfrog() {
-#     local file_path=$1
-#     local lambda_name=$2
-
-#     # Get the latest version from JFrog and increment it
-#     local latest_version=$(curl -s -u "$JFROG_USER:$JFROG_API_KEY" \
-#         "${JFROG_URL}/${JFROG_REPO}/${lambda_name}/" | grep -o '"uri":"/[^"]*"' | awk -F'/' '{print $NF}' | grep -o 'V[0-9]\+' | sed 's/V//' | sort -n | tail -n1)
-
-    
-#     local new_version=1
-#     if [[ -n "$latest_version" ]]; then
-#         new_version=$((latest_version + 1))
-#     fi
-
-#     local versioned_filename="${lambda_name}V${new_version}.zip"
-#     local upload_url="${JFROG_URL}/${JFROG_REPO}/${lambda_name}/${versioned_filename}"
-
-#     $DEBUG && echo "DEBUG: Uploading $versioned_filename to JFrog at $upload_url"
-
-#     if [[ -n "$JFROG_USER" && -n "$JFROG_API_KEY" ]]; then
-#         curl -v -u "$JFROG_USER:$JFROG_API_KEY" \
-#              -T "$file_path" \
-#              "$upload_url"
-#     else
-#         echo "ERROR: JFrog credentials not found. Skipping JFrog upload."
-#         return 1
-#     fi
-# }
-
 upload_to_jfrog() {
     local file_path=$1
     local lambda_name=$2
@@ -138,9 +91,9 @@ upload_to_jfrog() {
     # Get the latest version from JFrog and increment it
     local latest_version=$(curl -s -u "$JFROG_USER:$JFROG_API_KEY" \
         "${JFROG_URL}/${JFROG_REPO}/${lambda_name}/" | 
-        grep -o "${lambda_name}V[0-9]\+\.zip" |  # Extract filenames
-        grep -o 'V[0-9]\+' |                    # Extract version part
-        sed 's/V//' | sort -n | tail -n1)       # Sort and get highest
+        grep -o "${lambda_name}-[0-9]\+\.zip" |  # Extract filenames
+        grep -o '[0-9]\+' |                    # Extract version part
+        sort -n | tail -n1)       # Sort and get highest
 
     local new_version=1
     if [[ -n "$latest_version" ]]; then
@@ -150,7 +103,7 @@ upload_to_jfrog() {
     echo "Latest version: V$latest_version"
     echo "Next version: V$new_version"  
 
-    local versioned_filename="${lambda_name}V${new_version}.zip"
+    local versioned_filename="${lambda_name}-${new_version}.zip"
     local upload_url="${JFROG_URL}/${JFROG_REPO}/${lambda_name}/${versioned_filename}"
 
     echo "Uploading $versioned_filename to JFrog at $upload_url"
@@ -168,9 +121,6 @@ upload_to_jfrog() {
         return 1
     fi
 }
-
-
-
 
 # deploy_lambdas() {
 #     $DEBUG && echo "DEBUG: deploy_lambdas $1"
@@ -227,7 +177,7 @@ deploy_lambdas() {
         zip -r $ZIPFILE *
         mv $ZIPFILE $OLDPWD && cd $OLDPWD
 
-        aws s3 cp "${ZIPFILE}" "s3://${BUILD_ARTIFACT_BUCKET_PATH}${LAMBDA_CODE_ZIP_FILE_PATH}/${ZIPFILE}"
+        # aws s3 cp "${ZIPFILE}" "s3://${BUILD_ARTIFACT_BUCKET_PATH}${LAMBDA_CODE_ZIP_FILE_PATH}/${ZIPFILE}"
 
         # Upload to JFrog with Lambda Name
         upload_to_jfrog "${ZIPFILE}" "${LAMBDA_NAME}"
