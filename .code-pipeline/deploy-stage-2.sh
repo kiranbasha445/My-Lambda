@@ -82,7 +82,9 @@ upload_to_jfrog() {
         fi
     fi
 
-    local upload_url="${JFROG_URL}/${JFROG_REPO}/${lambda_name}/${versioned_filename}"
+    #local upload_url="${JFROG_URL}/${JFROG_REPO}/${lambda_name}/${versioned_filename}"
+    local upload_url="${JFROG_URL}/${JFROG_REPO}/${lambda_name}/${ENVIRONMENT_NAME}/${versioned_filename}"
+
 
     echo "Uploading $versioned_filename to JFrog at $upload_url"
 
