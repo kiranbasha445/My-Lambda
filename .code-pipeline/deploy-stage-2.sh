@@ -65,7 +65,7 @@ upload_to_jfrog() {
     else
         # Fetch latest version from JFrog for staging and prod
         local latest_version=$(curl -s -u "$JFROG_USER:$JFROG_API_KEY" \
-            "${JFROG_URL}/${JFROG_REPO}/${lambda_name}/" | 
+            "${JFROG_URL}/${JFROG_REPO}/${ENVIRONMENT_NAME}/${lambda_name}/" | 
             grep -o "${lambda_name}-[sp]-[0-9]\+\.zip" |  # Extract matching filenames
             grep -o '[0-9]\+' |  # Extract version numbers
             sort -n | tail -n1)  # Get the highest version
@@ -83,7 +83,7 @@ upload_to_jfrog() {
     fi
 
     #local upload_url="${JFROG_URL}/${JFROG_REPO}/${lambda_name}/${versioned_filename}"
-    local upload_url="${JFROG_URL}/${JFROG_REPO}/${lambda_name}/${ENVIRONMENT_NAME}/${versioned_filename}"
+    local upload_url="${JFROG_URL}/${JFROG_REPO}/${ENVIRONMENT_NAME}/${lambda_name}/${versioned_filename}"
 
 
     echo "Uploading $versioned_filename to JFrog at $upload_url"
