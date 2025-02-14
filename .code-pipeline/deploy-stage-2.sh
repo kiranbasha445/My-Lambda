@@ -1,26 +1,13 @@
 #!/bin/bash
 set -e  # Exit immediately if any command fails
 
-# Purpose:
-# This script deploys the infrastructure common to all CIs.
-
-# Arguments:
-# Argument             Description
-# ----------------------------------------------------
-# application-name     Short name of the application
-# environment-name     Short name for the environment, ex: tbv, stg, prod
-# debug                Optional. true if you want to enable debug logging, false by default
-# deployment-role-arn  Optional. Provide the IAM role to use for deployment. Useful for cross-account deployments.
-
-# Example Usage:
-# ./deploy-stage-2.sh --application-name infra-starter --environment-name tbv --debug true
-
 echo "[START] Deployment started at $(date '+%Y-%m-%d %H:%M:%S')"
 
 APPLICATION_NAME=
 ENVIRONMENT_NAME=
 JFROG_API_KEYWORD=
 JFROG_API_KEY=
+AWS_ACCOUNT_ID=
 
 DEBUG=false
 
@@ -39,6 +26,9 @@ do
         --jfrog-api-key)
             JFROG_API_KEY=$2
             shift ;;
+        --aws-account)
+            AWS_ACCOUNT_ID=$2
+            shift;;
         --debug)
             DEBUG=$2
             shift ;;
@@ -49,30 +39,15 @@ do
     shift
 done
 
-$DEBUG && echo "DEBUG: APPLICATION_NAME=${APPLICATION_NAME}"
-$DEBUG && echo "DEBUG: ENVIRONMENT_NAME=${ENVIRONMENT_NAME}"
-
-PIPELINE_STACK_NAME="${APPLICATION_NAME}-${ENVIRONMENT_NAME}-pipeline-stack"
-$DEBUG && echo "DEBUG: PIPELINE_STACK_NAME: $PIPELINE_STACK_NAME"
-
-# Use GitHub Actions variables for the S3 path
-GITHUB_RUN_ID=${GITHUB_RUN_ID:-"local-run"}
-GITHUB_SHA=${GITHUB_SHA:-"local-sha"}
-
-# Construct S3 path using GitHub Actions variables
-S3_PATH="${APPLICATION_NAME}/${ENVIRONMENT_NAME}/${GITHUB_RUN_ID}/${GITHUB_SHA}"
-$DEBUG && echo "DEBUG: S3_PATH: ${S3_PATH}"
-BUILD_ARTIFACT_BUCKET_PATH=$(echo $S3_PATH | awk -F'/' '{print $1}')
-$DEBUG && echo "DEBUG: BUILD_ARTIFACT_BUCKET_PATH=${BUILD_ARTIFACT_BUCKET_PATH}"
-S3_PATH_TO_BUILD_ARTIFACT=$(echo $S3_PATH | grep -o '/.*[^/]')
-$DEBUG && echo "DEBUG: S3_PATH_TO_BUILD_ARTIFACT=${S3_PATH_TO_BUILD_ARTIFACT}"
-BUILD_ARTIFACT_NAME=$(echo $S3_PATH | awk -F '/' '{print $NF}')
-$DEBUG && echo "DEBUG: BUILD_ARTIFACT_NAME=${BUILD_ARTIFACT_NAME}"
-
-LAMBDA_CODE_ZIP_FILE_PATH="${S3_PATH_TO_BUILD_ARTIFACT}/lambdas"
-$DEBUG && echo "DEBUG: LAMBDA_CODE_ZIP_FILE_PATH=${LAMBDA_CODE_ZIP_FILE_PATH}"
-LAMBDA_CODE_ZIP_FILE_PATH_NO_LEADING_FORWARDSLASH=$(echo ${LAMBDA_CODE_ZIP_FILE_PATH} | sed 's,^/,,')
-$DEBUG && echo "DEBUG: LAMBDA_CODE_ZIP_FILE_PATH_NO_LEADING_FORWARDSLASH=${LAMBDA_CODE_ZIP_FILE_PATH_NO_LEADING_FORWARDSLASH}"
+# Get AWS Account ID to determine environment
+case "$AWS_ACCOUNT_ID" in
+    "354918399435") ENVIRONMENT_NAME="dev" ;;  # Replace with your Dev AWS Account ID
+    "222222222222") ENVIRONMENT_NAME="staging" ;;  # Replace with your Staging AWS Account ID
+    "333333333333") ENVIRONMENT_NAME="prod" ;;  # Replace with your Prod AWS Account ID
+    *)
+        echo "ERROR: Unknown AWS account ID ($AWS_ACCOUNT_ID). Cannot determine environment."
+        exit 1 ;;
+esac
 
 # JFrog Artifactory Details
 JFROG_URL=${JFROG_URL:-"https://khalidallsha.jfrog.io/artifactory/lambda"}
@@ -80,30 +55,33 @@ JFROG_REPO=${JFROG_REPO:-"my-lambda-repo"}
 JFROG_USER=${JFROG_USERNAME:-"tadipatriallisha@gmail.com"}
 JFROG_API_KEY=${JFROG_API_KEY}
 
-echo "JFROG_URL=${JFROG_URL}"
-echo "JFROG_REPO=${JFROG_REPO}"
-echo "JFROG_USER=${JFROG_USER}"
-
 upload_to_jfrog() {
     local file_path=$1
     local lambda_name=$2
+    local versioned_filename=""
 
-    # Get the latest version from JFrog and increment it
-    local latest_version=$(curl -s -u "$JFROG_USER:$JFROG_API_KEY" \
-        "${JFROG_URL}/${JFROG_REPO}/${lambda_name}/" | 
-        grep -o "${lambda_name}-[0-9]\+\.zip" |  # Extract filenames
-        grep -o '[0-9]\+' |                    # Extract version part
-        sort -n | tail -n1)       # Sort and get highest
+    if [[ "$ENVIRONMENT_NAME" == "dev" ]]; then
+        versioned_filename="${lambda_name}-d-latest.zip"
+    else
+        # Fetch latest version from JFrog for staging and prod
+        local latest_version=$(curl -s -u "$JFROG_USER:$JFROG_API_KEY" \
+            "${JFROG_URL}/${JFROG_REPO}/${lambda_name}/" | 
+            grep -o "${lambda_name}-[sp]-[0-9]\+\.zip" |  # Extract matching filenames
+            grep -o '[0-9]\+' |  # Extract version numbers
+            sort -n | tail -n1)  # Get the highest version
 
-    local new_version=1
-    if [[ -n "$latest_version" ]]; then
-        new_version=$((latest_version + 1))
+        local new_version=1
+        if [[ -n "$latest_version" ]]; then
+            new_version=$((latest_version + 1))
+        fi
+
+        if [[ "$ENVIRONMENT_NAME" == "staging" ]]; then
+            versioned_filename="${lambda_name}-s-${new_version}.zip"
+        elif [[ "$ENVIRONMENT_NAME" == "prod" ]]; then
+            versioned_filename="${lambda_name}-p-${new_version}.zip"  # Always 1 for prod
+        fi
     fi
 
-    echo "Latest version: V$latest_version"
-    echo "Next version: V$new_version"  
-
-    local versioned_filename="${lambda_name}-${new_version}.zip"
     local upload_url="${JFROG_URL}/${JFROG_REPO}/${lambda_name}/${versioned_filename}"
 
     echo "Uploading $versioned_filename to JFrog at $upload_url"
@@ -122,68 +100,18 @@ upload_to_jfrog() {
     fi
 }
 
-# deploy_lambdas() {
-#     $DEBUG && echo "DEBUG: deploy_lambdas $1"
-
-#     if [ -f "${DIR}/cloudformation.yml" ]
-#     then
-#         $DEBUG && echo "DEBUG: directory${DIR}"
-#         LAMBDA_NAME=$(basename $DIR)
-#         $DEBUG && echo "DEBUG: LAMBDA_NAME=${LAMBDA_NAME}"
-#         ZIPFILE="$(basename $DIR)_$(date +%s).zip"
-#         $DEBUG && echo "DEBUG: ZIPFILE=${ZIPFILE}"
-
-#         # Print the files in the current directory
-#         echo "Files in the current directory:"
-#         ls -al src/lambdas/CEDGCR/
-
-#         cd ${DIR}dist
-#         zip -r $ZIPFILE *
-#         mv $ZIPFILE $OLDPWD && cd $OLDPWD
-
-#         aws s3 cp ${ZIPFILE} s3://${BUILD_ARTIFACT_BUCKET_PATH}${LAMBDA_CODE_ZIP_FILE_PATH}/${ZIPFILE}
-
-#         # aws cloudformation deploy \
-#         #     --stack-name ${APPLICATION_NAME}-${ENVIRONMENT_NAME}-${LAMBDA_NAME} \
-#         #     --template-file ${DIR}cloudformation.yml \
-#         #     --capabilities CAPABILITY_NAMED_IAM \
-#         #     --parameter-overrides \
-#         #     "ZippedLambdaS3Key=${LAMBDA_CODE_ZIP_FILE_PATH_NO_LEADING_FORWARDSLASH}/${ZIPFILE}" \
-#         #     "ArtifactsBucketName=${BUILD_ARTIFACT_BUCKET_PATH}" \
-#         #     "EnvironmentName=${ENVIRONMENT_NAME}" \
-#         #     "LambdaRoleName=My-Lambda-CEDRCR"
-	
-#         # Upload to JFrog
-#         upload_to_jfrog "${ZIPFILE}"
-#     fi
-# }
-
 deploy_lambdas() {
     if [ -f "${DIR}/cloudformation.yml" ]; then
         LAMBDA_NAME=$(basename "$DIR")
 
-        # Get the next versioned filename
-        local latest_version=$(curl -s -u "$JFROG_USER:$JFROG_API_KEY" \
-            "${JFROG_URL}/${JFROG_REPO}/${LAMBDA_NAME}/" | grep -o '"uri":"/[^"]*"' | awk -F'/' '{print $NF}' | grep -o 'V[0-9]\+' | sed 's/V//' | sort -n | tail -n1)
-        
-        local new_version=1
-        if [[ -n "$latest_version" ]]; then
-            new_version=$((latest_version + 1))
-        fi
-
-        ZIPFILE="${LAMBDA_NAME}V${new_version}.zip"
-
-        cd ${DIR}dist
-        zip -r $ZIPFILE *
-        mv $ZIPFILE $OLDPWD && cd $OLDPWD
-
-        # aws s3 cp "${ZIPFILE}" "s3://${BUILD_ARTIFACT_BUCKET_PATH}${LAMBDA_CODE_ZIP_FILE_PATH}/${ZIPFILE}"
+        cd ${DIR}/dist
+        zip -r "${LAMBDA_NAME}.zip" *
+        mv "${LAMBDA_NAME}.zip" $OLDPWD && cd $OLDPWD
 
         # Upload to JFrog with Lambda Name
-        upload_to_jfrog "${ZIPFILE}" "${LAMBDA_NAME}"
+        upload_to_jfrog "${LAMBDA_NAME}.zip" "${LAMBDA_NAME}"
     fi
 }
-
 
 CHANGED_SHARED_LAMBDA_CODE_DIRECTORIES=$(git diff --dirstat=files,0 HEAD~1 | grep 'src/shared' | sed 's/^.* * //')
 $DEBUG && echo "DEBUG: CHANGED_SHARED_LAMBDA_CODE_DIRECTORIES=${CHANGED_SHARED_LAMBDA_CODE_DIRECTORIES}"
@@ -196,7 +124,6 @@ then
     do
         deploy_lambdas $DIR
     done
-
     exit 0
 fi
 
@@ -210,6 +137,5 @@ then
     do
         deploy_lambdas $DIR
     done
-
     exit 0
 fi

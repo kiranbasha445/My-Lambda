@@ -15,7 +15,7 @@ jobs:
       AWS_ACCESS_KEY_ID: "YOUR_HARD_CODED_ACCESS_KEY"
       AWS_SECRET_ACCESS_KEY: "YOUR_HARD_CODED_SECRET_KEY"
       JFROG_API_KEY: ""
-
+      AWS_ACCOUNT: "354918399435"
     steps:
       # Step 1: Checkout the repository
       - name: Checkout repository
@@ -54,4 +54,4 @@ jobs:
       - name: Deploy
         run: |
           chmod +x .code-pipeline/deploy-stage-2.sh && \
-          bash .code-pipeline/deploy-stage-2.sh --environment ${{ env.ENVIRONMENT }} --application-name ${{ env.APPLICATION_NAME }} --jfrog-api-key ${{ env.JFROG_API_KEY }} --debug true
+          bash .code-pipeline/deploy-stage-2.sh --environment ${{ env.ENVIRONMENT }} --application-name ${{ env.APPLICATION_NAME }} --jfrog-api-key ${{ env.JFROG_API_KEY }} --aws-account ${{ env.AWS_ACCOUNT }} --debug true
