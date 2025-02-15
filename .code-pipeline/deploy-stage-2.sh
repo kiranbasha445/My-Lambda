@@ -52,7 +52,7 @@ esac
 # JFrog Artifactory Details
 JFROG_URL=${JFROG_URL:-"https://khalidallsha.jfrog.io/artifactory/lambda"}
 JFROG_REPO=${JFROG_REPO:-"my-lambda-repo"}
-JFROG_USER=${JFROG_USERNAME:-"tadipatriallisha@gmail.com"}
+JFROG_USER=$(aws secretsmanager get-secret-value --secret-id dev/my-lambda-repo/jfrog/jfroguserid --query SecretString --output text | jq -r '.JFROG_USER')
 JFROG_API_KEY=$(aws secretsmanager get-secret-value --secret-id dev/my-lambda-repo/jfrog/jfrogapikey --query SecretString --output text | jq -r '.JFROG_API_KEY')
 
 if [[ -z "$JFROG_API_KEY" ]]; then
