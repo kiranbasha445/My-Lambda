@@ -117,7 +117,7 @@ upload_to_jfrog() {
 
 # Function to deploy individual Lambda functions
 deploy_lambdas() {
-    if [ -f "${DIR}/cloudformation.yml" ]; then
+    if [ -f "${DIR}/index.ts" ]; then
         LAMBDA_NAME=$(basename "$DIR")
         
         echo "Zipping and preparing $LAMBDA_NAME for upload..."
