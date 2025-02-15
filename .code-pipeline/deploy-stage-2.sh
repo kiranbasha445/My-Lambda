@@ -41,7 +41,7 @@ done
 
 # Get AWS Account ID to determine environment
 case "$AWS_ACCOUNT_ID" in
-    "333333333333") ENVIRONMENT_NAME="dev" ;;  # Replace with your Dev AWS Account ID
+    "354918399435") ENVIRONMENT_NAME="dev" ;;  # Replace with your Dev AWS Account ID
     "333333333333") ENVIRONMENT_NAME="staging" ;;  # Replace with your Staging AWS Account ID
     "354918399435") ENVIRONMENT_NAME="prod" ;;  # Replace with your Prod AWS Account ID
     *)
