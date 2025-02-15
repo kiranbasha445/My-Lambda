@@ -3,14 +3,15 @@ set -e  # Exit immediately if any command fails
 
 echo "[START] Deployment started at $(date '+%Y-%m-%d %H:%M:%S')"
 
+# Define variables
 APPLICATION_NAME=
 ENVIRONMENT_NAME=
 JFROG_API_KEYWORD=
 JFROG_API_KEY=
 AWS_ACCOUNT_ID=
-
 DEBUG=false
 
+# Parse command-line arguments
 while [ -n "$1" ]
 do
     case "$1" in
@@ -33,47 +34,55 @@ do
             DEBUG=$2
             shift ;;
         *)
-            echo "$1 is not an option"
+            echo "ERROR: $1 is not a valid option."
             exit 1 ;;
     esac
     shift
 done
 
-# Get AWS Account ID to determine environment
+# Determine environment based on AWS Account ID
 case "$AWS_ACCOUNT_ID" in
-    "354918399435") ENVIRONMENT_NAME="dev" ;;  # Replace with your Dev AWS Account ID
-    "333333333333") ENVIRONMENT_NAME="staging" ;;  # Replace with your Staging AWS Account ID
-    "354918399435") ENVIRONMENT_NAME="prod" ;;  # Replace with your Prod AWS Account ID
+    "333333333333") ENVIRONMENT_NAME="dev" ;;  # Dev AWS Account ID
+    "354918399435") ENVIRONMENT_NAME="staging" ;;  # Staging AWS Account ID
+    "333333333333") ENVIRONMENT_NAME="prod" ;;  # Prod AWS Account ID (Duplicate Account ID, check this!)
     *)
         echo "ERROR: Unknown AWS account ID ($AWS_ACCOUNT_ID). Cannot determine environment."
         exit 1 ;;
 esac
 
-# JFrog Artifactory Details
+# Set JFrog Artifactory details
 JFROG_URL=${JFROG_URL:-"https://khalidallsha.jfrog.io/artifactory/lambda"}
 JFROG_REPO=${JFROG_REPO:-"my-lambda-repo"}
+
+# Fetch JFrog credentials from AWS Secrets Manager
+echo "Fetching JFrog credentials from AWS Secrets Manager..."
 JFROG_USER=$(aws secretsmanager get-secret-value --secret-id dev/my-lambda-repo/jfrog/jfroguserid --query SecretString --output text | jq -r '.JFROG_USER')
 JFROG_API_KEY=$(aws secretsmanager get-secret-value --secret-id dev/my-lambda-repo/jfrog/jfrogapikey --query SecretString --output text | jq -r '.JFROG_API_KEY')
 
+# Ensure JFrog API key is retrieved successfully
 if [[ -z "$JFROG_API_KEY" ]]; then
     echo "ERROR: Failed to fetch JFROG_API_KEY from AWS Secrets Manager."
     exit 1
 fi
 
+# Function to upload Lambda zip files to JFrog
 upload_to_jfrog() {
     local file_path=$1
     local lambda_name=$2
     local versioned_filename=""
 
+    echo "Preparing to upload ${lambda_name} to JFrog..."
+    
+    # Determine versioning for JFrog artifacts
     if [[ "$ENVIRONMENT_NAME" == "dev" ]]; then
         versioned_filename="${lambda_name}-d-latest.zip"
     else
-        # Fetch latest version from JFrog for staging and prod
+        echo "Fetching latest version for $lambda_name from JFrog..."
         local latest_version=$(curl -s -u "$JFROG_USER:$JFROG_API_KEY" \
-            "${JFROG_URL}/${JFROG_REPO}/${ENVIRONMENT_NAME}/${lambda_name}/" | 
-            grep -o "${lambda_name}-[sp]-[0-9]\+\.zip" |  # Extract matching filenames
-            grep -o '[0-9]\+' |  # Extract version numbers
-            sort -n | tail -n1)  # Get the highest version
+            "${JFROG_URL}/${JFROG_REPO}/${ENVIRONMENT_NAME}/${lambda_name}/" | \
+            grep -o "${lambda_name}-[sp]-[0-9]\+\.zip" | \
+            grep -o '[0-9]\+' | \
+            sort -n | tail -n1)
 
         local new_version=1
         if [[ -n "$latest_version" ]]; then
@@ -83,21 +92,21 @@ upload_to_jfrog() {
         if [[ "$ENVIRONMENT_NAME" == "staging" ]]; then
             versioned_filename="${lambda_name}-s-${new_version}.zip"
         elif [[ "$ENVIRONMENT_NAME" == "prod" ]]; then
-            versioned_filename="${lambda_name}-p-${new_version}.zip"  # Always 1 for prod
+            versioned_filename="${lambda_name}-p-${new_version}.zip"
         fi
     fi
 
     local upload_url="${JFROG_URL}/${JFROG_REPO}/${ENVIRONMENT_NAME}/${lambda_name}/${versioned_filename}"
 
-
-    echo "Uploading $versioned_filename to JFrog at $upload_url"
-
+    echo "Uploading $versioned_filename to JFrog at $upload_url..."
+    
+    # Check for missing credentials
     if [[ -z "$JFROG_USER" || -z "$JFROG_API_KEY" ]]; then
         echo "ERROR: JFrog credentials not found. Skipping JFrog upload."
         return 1
     fi
 
-    # Upload file to JFrog
+    # Perform file upload
     if curl -v -u "$JFROG_USER:$JFROG_API_KEY" -T "$file_path" "$upload_url"; then
         echo "Upload successful: $versioned_filename"
     else
@@ -106,25 +115,29 @@ upload_to_jfrog() {
     fi
 }
 
+# Function to deploy individual Lambda functions
 deploy_lambdas() {
     if [ -f "${DIR}/cloudformation.yml" ]; then
         LAMBDA_NAME=$(basename "$DIR")
-
+        
+        echo "Zipping and preparing $LAMBDA_NAME for upload..."
+        
         cd ${DIR}/dist
         zip -r "${LAMBDA_NAME}.zip" *
         mv "${LAMBDA_NAME}.zip" $OLDPWD && cd $OLDPWD
 
-        # Upload to JFrog with Lambda Name
+        # Upload to JFrog
         upload_to_jfrog "${LAMBDA_NAME}.zip" "${LAMBDA_NAME}"
     fi
 }
 
+# Detect changes in shared Lambda code
 CHANGED_SHARED_LAMBDA_CODE_DIRECTORIES=$(git diff --dirstat=files,0 HEAD~1 | grep 'src/shared' | sed 's/^.* * //')
 $DEBUG && echo "DEBUG: CHANGED_SHARED_LAMBDA_CODE_DIRECTORIES=${CHANGED_SHARED_LAMBDA_CODE_DIRECTORIES}"
 
 if [[ $CHANGED_SHARED_LAMBDA_CODE_DIRECTORIES ]]
 then
-    echo "Detected changes in shared code, deploying all lambdas"
+    echo "Detected changes in shared code, deploying all Lambdas..."
     ALL_LAMBDA_DIRECTORIES=$(ls -d -l "src/lambdas"/**/)
     for DIR in $ALL_LAMBDA_DIRECTORIES
     do
@@ -133,6 +146,7 @@ then
     exit 0
 fi
 
+# Detect changes in individual Lambda directories
 CHANGED_LAMBDA_DIRECTORIES=$(git diff --dirstat=files,0 HEAD~1 | grep src/lambdas | sed 's/^.* * //')
 $DEBUG && echo "DEBUG: CHANGED_LAMBDA_DIRECTORIES=${CHANGED_LAMBDA_DIRECTORIES}"
 
@@ -145,3 +159,5 @@ then
     done
     exit 0
 fi
+
+echo "No changes detected. Deployment completed successfully."
