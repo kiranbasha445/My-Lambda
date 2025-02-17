@@ -42,8 +42,8 @@ done
 
 # Determine environment based on AWS Account ID
 case "$AWS_ACCOUNT_ID" in
-    "333333333333") ENVIRONMENT_NAME="dev" ;;  # Dev AWS Account ID
-    "354918399435") ENVIRONMENT_NAME="staging" ;;  # Staging AWS Account ID
+    "354918399435") ENVIRONMENT_NAME="dev" ;;  # Dev AWS Account ID
+    "333333333333") ENVIRONMENT_NAME="staging" ;;  # Staging AWS Account ID
     "333333333333") ENVIRONMENT_NAME="prod" ;;  # Prod AWS Account ID (Duplicate Account ID, check this!)
     *)
         echo "ERROR: Unknown AWS account ID ($AWS_ACCOUNT_ID). Cannot determine environment."
