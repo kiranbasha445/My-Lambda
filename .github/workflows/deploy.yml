@@ -29,9 +29,9 @@ jobs:
         with:
           node-version: 20
 
-      - name: Set environment variables for staging
+      - name: Set environment variables for dev
         run: |
-          echo "ENVIRONMENT=staging" >> $GITHUB_ENV
+          echo "ENVIRONMENT=dev" >> $GITHUB_ENV
           echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> $GITHUB_ENV
           echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> $GITHUB_ENV
           echo "JFROG_PASSWORD=${{ secrets.JFROG_PASSWORD }}" >> $GITHUB_ENV
