@@ -3,7 +3,7 @@ name: CI and Deploy Lambdas
 on:
   push:
     branches:
-      - staging
+      - dev
 
 jobs:
   deployLambdas:

@@ -25,7 +25,7 @@ export const handler: Handler = async (event: LambdaEvent) => {
       })
     };
   } catch (error) {
-    console.error('Error processing event: ', error);
+    console.error('Error processi ng event: ', error);
     return {
       statusCode: 500,
       body: JSON.stringify({
