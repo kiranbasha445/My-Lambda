@@ -52,7 +52,6 @@ esac
 
 # Set JFrog Artifactory details
 JFROG_URL=${JFROG_URL:-"https://khalidallsha.jfrog.io/artifactory/lambda"}
-JFROG_REPO=${JFROG_REPO:-"my-lambda-repo"}
 
 # Fetch JFrog credentials from AWS Secrets Manager
 echo "Fetching JFrog credentials from AWS Secrets Manager..."
@@ -66,6 +65,55 @@ if [[ -z "$JFROG_API_KEY" ]]; then
 fi
 
 # Function to upload Lambda zip files to JFrog
+# upload_to_jfrog() {
+#     local file_path=$1
+#     local lambda_name=$2
+#     local versioned_filename=""
+
+#     echo "Preparing to upload ${lambda_name} to JFrog..."
+    
+#     # Determine versioning for JFrog artifacts
+#     if [[ "$ENVIRONMENT_NAME" == "dev" ]]; then
+#         versioned_filename="${lambda_name}-d-latest.zip"
+#     else
+#         echo "Fetching latest version for $lambda_name from JFrog..."
+#         local latest_version=$(curl -s -u "$JFROG_USER:$JFROG_API_KEY" \
+#             "${JFROG_URL}/${JFROG_REPO}/${ENVIRONMENT_NAME}/${lambda_name}/" | \
+#             grep -o "${lambda_name}-[sp]-[0-9]\+\.zip" | \
+#             grep -o '[0-9]\+' | \
+#             sort -n | tail -n1)
+
+#         local new_version=1
+#         if [[ -n "$latest_version" ]]; then
+#             new_version=$((latest_version + 1))
+#         fi
+
+#         if [[ "$ENVIRONMENT_NAME" == "staging" ]]; then
+#             versioned_filename="${lambda_name}-s-${new_version}.zip"
+#         elif [[ "$ENVIRONMENT_NAME" == "prod" ]]; then
+#             versioned_filename="${lambda_name}-p-${new_version}.zip"
+#         fi
+#     fi
+
+#     local upload_url="${JFROG_URL}/${JFROG_REPO}/${ENVIRONMENT_NAME}/${lambda_name}/${versioned_filename}"
+
+#     echo "Uploading $versioned_filename to JFrog at $upload_url..."
+    
+#     # Check for missing credentials
+#     if [[ -z "$JFROG_USER" || -z "$JFROG_API_KEY" ]]; then
+#         echo "ERROR: JFrog credentials not found. Skipping JFrog upload."
+#         return 1
+#     fi
+
+#     # Perform file upload
+#     if curl -v -u "$JFROG_USER:$JFROG_API_KEY" -T "$file_path" "$upload_url"; then
+#         echo "Upload successful: $versioned_filename"
+#     else
+#         echo "ERROR: Failed to upload $versioned_filename to JFrog."
+#         return 1
+#     fi
+# }
+
 upload_to_jfrog() {
     local file_path=$1
     local lambda_name=$2
@@ -75,12 +123,12 @@ upload_to_jfrog() {
     
     # Determine versioning for JFrog artifacts
     if [[ "$ENVIRONMENT_NAME" == "dev" ]]; then
-        versioned_filename="${lambda_name}-d-latest.zip"
+        versioned_filename="Ostech.${lambda_name}.${ENVIRONMENT_NAME}.lambda.latest.npmrg"
     else
         echo "Fetching latest version for $lambda_name from JFrog..."
         local latest_version=$(curl -s -u "$JFROG_USER:$JFROG_API_KEY" \
-            "${JFROG_URL}/${JFROG_REPO}/${ENVIRONMENT_NAME}/${lambda_name}/" | \
-            grep -o "${lambda_name}-[sp]-[0-9]\+\.zip" | \
+            "${JFROG_URL}/" | \
+            grep -o "Ostech.${lambda_name}.${ENVIRONMENT_NAME}.lambda\.[0-9]\+\.0\.0\.npmrg" | \
             grep -o '[0-9]\+' | \
             sort -n | tail -n1)
 
@@ -89,14 +137,10 @@ upload_to_jfrog() {
             new_version=$((latest_version + 1))
         fi
 
-        if [[ "$ENVIRONMENT_NAME" == "staging" ]]; then
-            versioned_filename="${lambda_name}-s-${new_version}.zip"
-        elif [[ "$ENVIRONMENT_NAME" == "prod" ]]; then
-            versioned_filename="${lambda_name}-p-${new_version}.zip"
-        fi
+        versioned_filename="Ostech.${lambda_name}.${ENVIRONMENT_NAME}.lambda.${new_version}.0.0.npmrg"
     fi
 
-    local upload_url="${JFROG_URL}/${JFROG_REPO}/${ENVIRONMENT_NAME}/${lambda_name}/${versioned_filename}"
+    local upload_url="${JFROG_URL}/${versioned_filename}"
 
     echo "Uploading $versioned_filename to JFrog at $upload_url..."
     
@@ -114,6 +158,7 @@ upload_to_jfrog() {
         return 1
     fi
 }
+
 
 # Function to deploy individual Lambda functions
 deploy_lambdas() {
